@@ -1,0 +1,15 @@
+PODS:
+  - SCSiriWaveformView (1.0.3)
+  - Wit (4.1.0)
+
+DEPENDENCIES:
+  - SCSiriWaveformView
+  - Wit (~> 4.1.0)
+
+SPEC CHECKSUMS:
+  SCSiriWaveformView: b8b2756af42addcd31900c3945f24edafefb5395
+  Wit: c00af597e168d45b00109993bb378ce86456c346
+
+PODFILE CHECKSUM: ce3e52cf81d932969087501d95f9e14350eccc74
+
+COCOAPODS: 1.0.1

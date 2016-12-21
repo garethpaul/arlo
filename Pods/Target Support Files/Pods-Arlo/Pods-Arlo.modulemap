@@ -1,0 +1,6 @@
+framework module Pods_Arlo {
+  umbrella header "Pods-Arlo-umbrella.h"
+
+  export *
+  module * { export * }
+}

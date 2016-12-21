@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11129.15" systemVersion="16A201w" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11103.10"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="Arlo" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="screen02" translatesAutoresizingMaskIntoConstraints="NO" id="g8m-ax-6U8"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="TELL US HOW WE CAN HELP!" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CQ1-dg-HVN">
+                                <fontDescription key="fontDescription" type="system" pointSize="26"/>
+                                <color key="textColor" red="0.99999600648880005" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ANy-we-aPR" customClass="SiriWaveformView" customModule="Arlo" customModuleProvider="target">
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="100" id="BBk-6R-j6j"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="CQ1-dg-HVN" secondAttribute="trailing" id="3EM-2g-Jhh"/>
+                            <constraint firstItem="CQ1-dg-HVN" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="5Y0-3n-Pc0"/>
+                            <constraint firstItem="g8m-ax-6U8" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-20" id="BoR-VJ-ypt"/>
+                            <constraint firstAttribute="trailing" secondItem="ANy-we-aPR" secondAttribute="trailing" id="CVh-Ln-OOD"/>
+                            <constraint firstItem="ANy-we-aPR" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="JNu-2y-4bO"/>
+                            <constraint firstItem="g8m-ax-6U8" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" id="Jrm-eW-K2A"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="g8m-ax-6U8" secondAttribute="trailing" constant="-20" id="Xhc-qG-1g8"/>
+                            <constraint firstItem="CQ1-dg-HVN" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="80" id="fCh-st-rlh"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="g8m-ax-6U8" secondAttribute="bottom" id="gHt-1b-cjd"/>
+                            <constraint firstItem="ANy-we-aPR" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="xl1-Lj-AT2"/>
+                            <constraint firstItem="ANy-we-aPR" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="zme-Q9-PzZ"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="waveView" destination="ANy-we-aPR" id="wzo-Z1-9ch"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="32.799999999999997" y="38.23088455772114"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="screen02" width="1920" height="1200"/>
+    </resources>
+</document>
