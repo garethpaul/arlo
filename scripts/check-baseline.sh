@@ -39,8 +39,13 @@ if grep -Fq 'accessToken = ""' "$APP_DELEGATE"; then
   exit 1
 fi
 
-if ! grep -Fq "if !AppDelegate.witAccessToken.isEmpty" "$APP_DELEGATE"; then
+if ! grep -Fq "if AppDelegate.isWitConfigured" "$APP_DELEGATE"; then
   printf '%s\n' "Wit token assignment must be guarded by a non-empty check." >&2
+  exit 1
+fi
+
+if ! grep -Fq "static var isWitConfigured: Bool" "$APP_DELEGATE"; then
+  printf '%s\n' "AppDelegate must expose a read-only Wit configuration state." >&2
   exit 1
 fi
 
@@ -119,6 +124,21 @@ if ! grep -Fq "waveView.updateWithLevel(currentAudioLevel)" "$VIEW_CONTROLLER"; 
   exit 1
 fi
 
+if ! grep -Fq "configureVoiceButtonState()" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Voice button state must be configured explicitly." >&2
+  exit 1
+fi
+
+if ! grep -Fq "btnVoiceRecog.isEnabled = AppDelegate.isWitConfigured" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Voice button must be disabled while the committed Wit token is empty." >&2
+  exit 1
+fi
+
+if ! grep -Fq "btnVoiceRecog.alpha = AppDelegate.isWitConfigured ? 1.0 : 0.35" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Voice button must visibly indicate unavailable Wit configuration." >&2
+  exit 1
+fi
+
 if ! grep -Fq "NSMicrophoneUsageDescription" "$INFO_PLIST"; then
   printf '%s\n' "Microphone permission usage description must be present." >&2
   exit 1
@@ -176,6 +196,11 @@ fi
 
 if ! grep -Fq "WITAudioPowerChanged" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the waveform audio-power baseline." >&2
+  exit 1
+fi
+
+if ! grep -Fq "The voice button stays disabled until a non-empty local Wit access token is supplied" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the empty-token voice button guard." >&2
   exit 1
 fi
 

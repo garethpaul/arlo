@@ -14,6 +14,9 @@ import Wit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private static let witAccessToken = ""
+    static var isWitConfigured: Bool {
+        return !witAccessToken.isEmpty
+    }
 
     var window: UIWindow?
 
@@ -33,7 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func configureWit() {
-        if !AppDelegate.witAccessToken.isEmpty {
+        if AppDelegate.isWitConfigured {
             Wit.sharedInstance().accessToken = AppDelegate.witAccessToken
         }
         Wit.sharedInstance().detectSpeechStop = WITVadConfig.detectSpeechStop

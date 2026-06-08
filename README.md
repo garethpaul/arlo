@@ -69,6 +69,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Configuration and Secrets
 
 - The scan found credential-adjacent names. Review configuration paths before running against real accounts.
+- The voice button stays disabled until a non-empty local Wit access token is supplied outside the committed placeholder.
 
 ## Security and Privacy Notes
 
@@ -83,6 +84,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - The waveform uses Wit `WITAudioPowerChanged` notifications for audio levels
   and keeps the display link limited to animation cadence.
+- With the committed empty Wit token, the microphone control is dimmed and disabled
+  so demo builds do not invite recording attempts before local credential setup.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.

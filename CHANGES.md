@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Disabled the Wit mic button while the committed access token placeholder is
+  empty.
 - Updated waveform metering to use Wit `WITAudioPowerChanged` audio power
   notifications instead of display-layer scale.
 - Added `make check` as the SDK-free Arlo baseline wrapper.

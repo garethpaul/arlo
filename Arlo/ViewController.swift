@@ -59,6 +59,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         
         btnVoiceRecog.frame = CGRect(x: 50, y: 50, width: 50, height: 50)
         btnVoiceRecog.center = CGPoint(x: self.view.center.x, y: screenHeight-50)
+        configureVoiceButtonState()
         
         self.view.addSubview(btnVoiceRecog)
         
@@ -113,6 +114,11 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
 
     private func configureAudioPowerObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.audioPowerDidChange(_:)), name: witAudioPowerChangedNotification, object: nil)
+    }
+
+    private func configureVoiceButtonState() {
+        btnVoiceRecog.isEnabled = AppDelegate.isWitConfigured
+        btnVoiceRecog.alpha = AppDelegate.isWitConfigured ? 1.0 : 0.35
     }
 
     @objc private func audioPowerDidChange(_ notification: Notification) {
