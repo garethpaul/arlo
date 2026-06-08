@@ -36,6 +36,11 @@ Contribution rules:
 
 ## Security And Privacy
 
+Canonical security policy and reporting:
+
+- [`SECURITY.md`](SECURITY.md)
+
+
 Voice input and intent recognition are sensitive. Do not commit access tokens,
 recorded audio, transcripts, or service credentials.
 
