@@ -72,11 +72,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     func updateMeters() {
         
         let talk = btnVoiceRecog.volumeLayer.contentsScale
-        
-        print(talk)
-        
-        //CircleView.lineWidth
-        
+
         if talk == 2 {
             let normalizedValue:CGFloat = pow(10, CGFloat(1)/20)
             waveView.updateWithLevel(normalizedValue)
@@ -91,34 +87,18 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
-        print("starting")
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        print("finished")
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, willSpeakRangeOfSpeechString characterRange: NSRange, utterance: AVSpeechUtterance) {
-        let s = (utterance.speechString as NSString).substring(with: characterRange)
-        print("about to say \(s)")
     }
     
     public func witDidGraspIntent(_ outcomes: [Any]!, messageId: String!, customData: Any!, error e: Error!) {
-        
-        if (e != nil) {
-            
-        }
-        else {
-            if outcomes != nil && outcomes.count > 0 {
-                print(outcomes)
-                
-            }
-            
-        }
     }
     
     func witDidGetAudio(_ chunk: Data!) {
-        print("did get audio")
     }
     
     func witDidStartRecording() {
@@ -136,4 +116,3 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     
 
 }
-
