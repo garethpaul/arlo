@@ -48,3 +48,6 @@ user-visible actions explicit.
 - Background recording behavior
 - Broad assistant capabilities without documented intent handling
 - Dependency migrations that cannot be opened through the workspace
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
