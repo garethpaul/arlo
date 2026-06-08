@@ -1,5 +1,8 @@
 # Arlo
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 Legacy Swift iOS voice assistant prototype using speech synthesis, Wit.ai voice
 capture, and a Siri-style waveform UI.
 
