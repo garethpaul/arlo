@@ -92,4 +92,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> Arlo <!-- README-OVERVIEW-IMAGE --> Legacy Swift iOS voice assistant prototype using speech synthesis, Wit.ai voice capture, and a Siri-style waveform UI. Toolchain - Open the CocoaPods workspace: `Arlo.xcworkspace` - CocoaPods lockfile: `Podfile.lock` - Main app target: `Arlo`
+> Arlo Legacy Swift iOS voice assistant prototype using speech synthesis, Wit.ai voice capture, and a Siri-style waveform UI. Toolchain - Open the CocoaPods workspace: `Arlo.xcworkspace` - CocoaPods lockfile: `Podfile.lock` - Main app target: `Arlo`
