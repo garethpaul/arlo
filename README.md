@@ -87,9 +87,3 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Contributing
 
 Keep changes small and tied to the project that is already present in this repository. For code changes, document the toolchain used, avoid committing generated dependency directories or local configuration, and update this README when setup or verification steps change.
-
-## Existing Project Notes
-
-Prior README summary:
-
-> Arlo Legacy Swift iOS voice assistant prototype using speech synthesis, Wit.ai voice capture, and a Siri-style waveform UI. Toolchain - Open the CocoaPods workspace: `Arlo.xcworkspace` - CocoaPods lockfile: `Podfile.lock` - Main app target: `Arlo`
