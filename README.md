@@ -53,7 +53,15 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Testing and Verification
 
-- Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+Run the SDK-free source baseline check first:
+
+```sh
+scripts/check-baseline.sh
+```
+
+Open `Arlo.xcworkspace` in Xcode for simulator or device verification. The legacy baseline is Swift 3.0, iOS deployment target 9.3, CocoaPods 1.0.1 provenance, Wit 4.1.0, and SCSiriWaveformView 1.0.3.
+
+This host does not have `xcodebuild`, `pod`, or `swift`, so full build, test, and CocoaPods verification must happen on a macOS machine with the matching legacy toolchain.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -74,6 +82,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `CHANGES.md` for the maintenance history.
 
 ## Contributing
 

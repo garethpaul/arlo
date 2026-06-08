@@ -9,6 +9,16 @@ PROJECT_FILE="$ROOT_DIR/Arlo.xcodeproj/project.pbxproj"
 PODFILE="$ROOT_DIR/Podfile"
 POD_LOCK="$ROOT_DIR/Podfile.lock"
 
+if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
+  printf '%s\n' "CHANGES.md must document repository maintenance." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Arlo Changes" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "CHANGES.md must identify the project." >&2
+  exit 1
+fi
+
 if grep -Fq "try!" "$APP_DELEGATE"; then
   printf '%s\n' "AppDelegate must not force-unwrap audio session setup." >&2
   exit 1
@@ -111,6 +121,31 @@ fi
 
 if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the baseline check." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Arlo.xcworkspace" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the CocoaPods workspace entry point." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Swift 3.0" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the legacy Swift baseline." >&2
+  exit 1
+fi
+
+if ! grep -Fq "CocoaPods 1.0.1" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document CocoaPods lockfile provenance." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'This host does not have `xcodebuild`, `pod`, or `swift`' "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document local Apple toolchain limitations." >&2
+  exit 1
+fi
+
+if ! grep -Fq "CHANGES.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must point to CHANGES.md." >&2
   exit 1
 fi
 
