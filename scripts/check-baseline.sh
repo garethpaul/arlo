@@ -54,6 +54,16 @@ if ! grep -Fq "displayLink?.invalidate()" "$VIEW_CONTROLLER"; then
   exit 1
 fi
 
+if ! grep -Fq "displayLink = nil" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform display link must be released after invalidation." >&2
+  exit 1
+fi
+
+if ! grep -Fq "configureDisplayLink()" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform display link must be configured through a lifecycle helper." >&2
+  exit 1
+fi
+
 if ! grep -Fq "displayLink?.isPaused = false" "$VIEW_CONTROLLER"; then
   printf '%s\n' "Waveform display link must resume when Wit starts recording." >&2
   exit 1
@@ -104,4 +114,4 @@ if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/README.md"; then
   exit 1
 fi
 
-printf '%s\n' "Arlo voice privacy baseline checks passed."
+printf '%s\n' "Arlo audio privacy baseline checks passed."

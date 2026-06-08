@@ -48,10 +48,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         _ = self.view.frame
         
         
-        displayLink = CADisplayLink(target: self, selector: #selector(ViewController.updateMeters))
-        displayLink?.add(to: RunLoop.current, forMode: RunLoopMode(rawValue: RunLoopMode.commonModes.rawValue))
-        
-        displayLink?.isPaused = true
+        configureDisplayLink()
         
         let screenHeight = UIScreen.main.bounds.height
         
@@ -87,14 +84,35 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         super.didReceiveMemoryWarning()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        configureDisplayLink()
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        displayLink?.isPaused = true
+        invalidateDisplayLink()
         talker.stopSpeaking(at: .immediate)
     }
 
     deinit {
+        invalidateDisplayLink()
+    }
+
+    private func configureDisplayLink() {
+        if displayLink != nil {
+            return
+        }
+
+        let link = CADisplayLink(target: self, selector: #selector(ViewController.updateMeters))
+        link.add(to: RunLoop.current, forMode: RunLoopMode(rawValue: RunLoopMode.commonModes.rawValue))
+        link.isPaused = true
+        displayLink = link
+    }
+
+    private func invalidateDisplayLink() {
         displayLink?.invalidate()
+        displayLink = nil
     }
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
