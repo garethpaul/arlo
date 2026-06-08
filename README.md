@@ -38,7 +38,8 @@ outside Git.
 ## Modernization Notes
 
 The current baseline avoids launch crashes from forced audio-session setup,
-keeps Wit token assignment guarded, and removes direct logging of voice callback
-data. Future work should move local credentials into an ignored configuration
-file, modernize Swift/CocoaPods dependencies, and add simulator or device
-verification for microphone permissions, speech synthesis, and waveform updates.
+keeps Wit token assignment guarded, removes direct logging of voice callback
+data, and invalidates the waveform display link during teardown. Future work
+should move local credentials into an ignored configuration file, modernize
+Swift/CocoaPods dependencies, and add simulator or device verification for
+microphone permissions, speech synthesis, and waveform updates.

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVFoundation
 import Wit
 import SCSiriWaveformView
 
@@ -25,7 +26,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
 
     
     var talker = AVSpeechSynthesizer()
-    var displayLink = CADisplayLink()
+    var displayLink: CADisplayLink?
     
     @IBOutlet weak var waveView: SiriWaveformView!
     let btnVoiceRecog = WITMicButton()
@@ -48,9 +49,9 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         
         
         displayLink = CADisplayLink(target: self, selector: #selector(ViewController.updateMeters))
-        displayLink.add(to: RunLoop.current, forMode: RunLoopMode(rawValue: RunLoopMode.commonModes.rawValue))
+        displayLink?.add(to: RunLoop.current, forMode: RunLoopMode(rawValue: RunLoopMode.commonModes.rawValue))
         
-        displayLink.isPaused = true
+        displayLink?.isPaused = true
         
         let screenHeight = UIScreen.main.bounds.height
         
@@ -86,6 +87,16 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         super.didReceiveMemoryWarning()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        displayLink?.isPaused = true
+        talker.stopSpeaking(at: .immediate)
+    }
+
+    deinit {
+        displayLink?.invalidate()
+    }
+
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
     }
     
@@ -102,11 +113,11 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
     
     func witDidStartRecording() {
-        displayLink.isPaused = false
+        displayLink?.isPaused = false
     }
     
     func witDidStopRecording() {
-        displayLink.isPaused = true
+        displayLink?.isPaused = true
         waveView.updateWithLevel(0)
     }
     

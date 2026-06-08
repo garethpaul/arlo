@@ -7,8 +7,7 @@
 //
 
 import UIKit
-import CoreData
-import AVKit
+import AVFoundation
 import Wit
 
 @UIApplicationMain
