@@ -42,7 +42,7 @@ recorded audio, transcripts, or service credentials.
 Future assistant capabilities should make captured data, remote processing, and
 user-visible actions explicit.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Voice-service credentials or signing files
 - Background recording behavior
