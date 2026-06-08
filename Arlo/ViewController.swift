@@ -8,6 +8,7 @@
 
 import UIKit
 import AVFoundation
+import Darwin
 import Wit
 import SCSiriWaveformView
 
@@ -27,6 +28,8 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     
     var talker = AVSpeechSynthesizer()
     var displayLink: CADisplayLink?
+    private let witAudioPowerChangedNotification = Notification.Name(rawValue: "WITAudioPowerChanged")
+    private var currentAudioLevel: CGFloat = 0
     
     @IBOutlet weak var waveView: SiriWaveformView!
     let btnVoiceRecog = WITMicButton()
@@ -49,6 +52,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         
         
         configureDisplayLink()
+        configureAudioPowerObserver()
         
         let screenHeight = UIScreen.main.bounds.height
         
@@ -68,16 +72,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
     
     func updateMeters() {
-        
-        let talk = btnVoiceRecog.volumeLayer.contentsScale
-
-        if talk == 2 {
-            let normalizedValue:CGFloat = pow(10, CGFloat(1)/20)
-            waveView.updateWithLevel(normalizedValue)
-        } else {
-            waveView.updateWithLevel(0)
-        }
-
+        waveView.updateWithLevel(currentAudioLevel)
     }
 
     override func didReceiveMemoryWarning() {
@@ -96,6 +91,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
 
     deinit {
+        NotificationCenter.default.removeObserver(self)
         invalidateDisplayLink()
     }
 
@@ -115,6 +111,25 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         displayLink = nil
     }
 
+    private func configureAudioPowerObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.audioPowerDidChange(_:)), name: witAudioPowerChangedNotification, object: nil)
+    }
+
+    @objc private func audioPowerDidChange(_ notification: Notification) {
+        guard let power = notification.object as? NSNumber else {
+            currentAudioLevel = 0
+            return
+        }
+
+        currentAudioLevel = normalizedWaveLevel(fromPower: power.floatValue)
+    }
+
+    private func normalizedWaveLevel(fromPower power: Float) -> CGFloat {
+        let normalizedPower = CGFloat((power + 42.0) / 42.0)
+        let clampedPower = max(CGFloat(0), min(CGFloat(1), normalizedPower))
+        return pow(clampedPower, CGFloat(1.5))
+    }
+
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
     }
     
@@ -131,11 +146,13 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
     
     func witDidStartRecording() {
+        currentAudioLevel = 0
         displayLink?.isPaused = false
     }
     
     func witDidStopRecording() {
         displayLink?.isPaused = true
+        currentAudioLevel = 0
         waveView.updateWithLevel(0)
     }
     

@@ -84,6 +84,41 @@ if ! grep -Fq "displayLink?.isPaused = true" "$VIEW_CONTROLLER"; then
   exit 1
 fi
 
+if grep -Fq "volumeLayer.contentsScale" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform levels must not use display layer scale as an audio proxy." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'Notification.Name(rawValue: "WITAudioPowerChanged")' "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must observe Wit audio power notifications." >&2
+  exit 1
+fi
+
+if ! grep -Fq "NotificationCenter.default.addObserver" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must register for audio power notifications." >&2
+  exit 1
+fi
+
+if ! grep -Fq "NotificationCenter.default.removeObserver(self)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must unregister notification observers during teardown." >&2
+  exit 1
+fi
+
+if ! grep -Fq "private var currentAudioLevel: CGFloat = 0" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must track the current normalized audio level." >&2
+  exit 1
+fi
+
+if ! grep -Fq "normalizedWaveLevel(fromPower" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must normalize Wit audio power before updating the waveform." >&2
+  exit 1
+fi
+
+if ! grep -Fq "waveView.updateWithLevel(currentAudioLevel)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform updates must use the current normalized audio level." >&2
+  exit 1
+fi
+
 if ! grep -Fq "NSMicrophoneUsageDescription" "$INFO_PLIST"; then
   printf '%s\n' "Microphone permission usage description must be present." >&2
   exit 1
@@ -121,6 +156,26 @@ fi
 
 if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the baseline check." >&2
+  exit 1
+fi
+
+if [ ! -f "$ROOT_DIR/Makefile" ]; then
+  printf '%s\n' "Makefile is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must run the SDK-free baseline check." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the make check wrapper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "WITAudioPowerChanged" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the waveform audio-power baseline." >&2
   exit 1
 fi
 
