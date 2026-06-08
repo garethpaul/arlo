@@ -49,6 +49,11 @@ if ! grep -Fq "static var isWitConfigured: Bool" "$APP_DELEGATE"; then
   exit 1
 fi
 
+if ! grep -Fq "return !witAccessToken.isEmpty" "$APP_DELEGATE"; then
+  printf '%s\n' "Wit configuration state must derive from the committed token placeholder." >&2
+  exit 1
+fi
+
 if grep -Fq "print(" "$VIEW_CONTROLLER"; then
   printf '%s\n' "ViewController must not directly print voice or intent callback data." >&2
   exit 1
