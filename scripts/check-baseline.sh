@@ -10,6 +10,7 @@ PROJECT_FILE="$ROOT_DIR/Arlo.xcodeproj/project.pbxproj"
 PODFILE="$ROOT_DIR/Podfile"
 POD_LOCK="$ROOT_DIR/Podfile.lock"
 MIC_ACCESSIBILITY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-mic-accessibility-guard.md"
+PRIVACY_PERMISSION_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-privacy-permission-copy.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -28,6 +29,16 @@ fi
 
 if ! grep -Fq "Status: Completed" "$MIC_ACCESSIBILITY_PLAN" || ! grep -Fq "make check" "$MIC_ACCESSIBILITY_PLAN"; then
   printf '%s\n' "Arlo mic accessibility plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$PRIVACY_PERMISSION_PLAN" ]; then
+  printf '%s\n' "Arlo privacy permission plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$PRIVACY_PERMISSION_PLAN" || ! grep -Fq "make check" "$PRIVACY_PERMISSION_PLAN"; then
+  printf '%s\n' "Arlo privacy permission plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -196,6 +207,16 @@ if ! grep -Fq "NSMicrophoneUsageDescription" "$INFO_PLIST"; then
   exit 1
 fi
 
+if ! grep -Fq "Arlo uses the microphone when you tap Voice input to send speech to Wit.ai." "$INFO_PLIST"; then
+  printf '%s\n' "Microphone permission text must describe user-triggered Wit voice capture." >&2
+  exit 1
+fi
+
+if grep -Fq "NSLocationWhenInUseUsageDescription" "$INFO_PLIST"; then
+  printf '%s\n' "Unused location permission description must not be declared." >&2
+  exit 1
+fi
+
 if ! grep -Fq "SWIFT_VERSION = 3.0;" "$PROJECT_FILE"; then
   printf '%s\n' "Project must document the legacy Swift 3.0 setting." >&2
   exit 1
@@ -258,6 +279,11 @@ fi
 
 if ! grep -Fq "arlo.voice.microphone" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the microphone accessibility identifier." >&2
+  exit 1
+fi
+
+if ! grep -Fq "microphone permission text" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the microphone permission text baseline." >&2
   exit 1
 fi
 

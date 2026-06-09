@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Tightened privacy metadata by removing the unused location usage description
+  and replacing generic microphone text with user-triggered Wit capture copy.
 - Added a stable `arlo.voice.microphone` accessibility identifier and VoiceOver
   label/hint to the Wit microphone control.
 - Hid the decorative microphone logo from accessibility focus and replaced the

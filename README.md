@@ -88,6 +88,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   so demo builds do not invite recording attempts before local credential setup.
 - The microphone control exposes the `arlo.voice.microphone` accessibility
   identifier for UI tests and assistive technology.
+- The microphone permission text describes user-triggered Wit voice capture, and
+  no location permission text is declared because this source tree has no
+  location flow.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.

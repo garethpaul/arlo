@@ -41,9 +41,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This is used to provide location services.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This is used for accessing voice services.</string>
+	<string>Arlo uses the microphone when you tap Voice input to send speech to Wit.ai.</string>
 </dict>
 </plist>

@@ -20,6 +20,7 @@ Priority:
 - Keep the CocoaPods workspace as the build entry point
 - Avoid committing Wit.ai credentials, generated signing material, or user audio
 - Keep the microphone control accessible and test-addressable
+- Keep iOS privacy permission text specific to the app behavior that exists
 - Keep UI behavior simple enough to inspect from `ViewController.swift`
 
 Next priorities:
@@ -46,6 +47,8 @@ Canonical security policy and reporting:
 
 Voice input and intent recognition are sensitive. Do not commit access tokens,
 recorded audio, transcripts, or service credentials.
+Do not declare unused privacy permissions, and keep microphone permission copy
+specific about user-triggered Wit voice capture.
 
 Future assistant capabilities should make captured data, remote processing, and
 user-visible actions explicit.
