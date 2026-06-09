@@ -12,6 +12,7 @@ POD_LOCK="$ROOT_DIR/Podfile.lock"
 MIC_ACCESSIBILITY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-mic-accessibility-guard.md"
 PRIVACY_PERMISSION_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-privacy-permission-copy.md"
 WAVEFORM_POWER_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-power-finite-guard.md"
+MAKE_GATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-make-gate-targets.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -50,6 +51,16 @@ fi
 
 if ! grep -Fq "Status: Completed" "$WAVEFORM_POWER_PLAN" || ! grep -Fq "make check" "$WAVEFORM_POWER_PLAN"; then
   printf '%s\n' "Arlo waveform power finite guard plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$MAKE_GATE_PLAN" ]; then
+  printf '%s\n' "Arlo make gate plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$MAKE_GATE_PLAN" || ! grep -Fq "make check" "$MAKE_GATE_PLAN"; then
+  printf '%s\n' "Arlo make gate plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -283,8 +294,43 @@ if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/Makefile"; then
   exit 1
 fi
 
+if ! grep -Fq "lint:" "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must expose a lint gate." >&2
+  exit 1
+fi
+
+if ! grep -Fq "test:" "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must expose a test gate." >&2
+  exit 1
+fi
+
+if ! grep -Fq "build:" "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must expose a build gate." >&2
+  exit 1
+fi
+
+if ! grep -Fq "verify: lint test build" "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must expose a combined verify gate." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the make check wrapper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make lint" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the lint gate." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make test" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the test gate." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make build" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the build gate." >&2
   exit 1
 fi
 

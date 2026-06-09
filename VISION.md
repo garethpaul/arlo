@@ -22,6 +22,7 @@ Priority:
 - Keep the microphone control accessible and test-addressable
 - Keep waveform rendering resilient to malformed voice-power values
 - Keep iOS privacy permission text specific to the app behavior that exists
+- Keep root lint, test, and build gates tied to the SDK-free iOS baseline
 - Keep UI behavior simple enough to inspect from `ViewController.swift`
 
 Next priorities:

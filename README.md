@@ -53,16 +53,19 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Testing and Verification
 
-Run the SDK-free source baseline check first:
+Run the SDK-free source baseline and root wrapper gates first:
 
 ```sh
+make lint
+make test
+make build
 make check
 scripts/check-baseline.sh
 ```
 
 Open `Arlo.xcworkspace` in Xcode for simulator or device verification. The legacy baseline is Swift 3.0, iOS deployment target 9.3, CocoaPods 1.0.1 provenance, Wit 4.1.0, and SCSiriWaveformView 1.0.3.
 
-This host does not have `xcodebuild`, `pod`, or `swift`, so full build, test, and CocoaPods verification must happen on a macOS machine with the matching legacy toolchain.
+This host does not have `xcodebuild`, `pod`, or `swift`, so full build, test, and CocoaPods verification must happen on a macOS machine with the matching legacy toolchain. The root `make test` and `make build` targets preserve the source preflight and report that Xcode workspace verification requires a checked-out macOS environment because no shared build or UI-test scheme is checked in.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -93,7 +96,11 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The microphone permission text describes user-triggered Wit voice capture, and
   no location permission text is declared because this source tree has no
   location flow.
+- Root `make lint`, `make test`, `make build`, and `make check` keep the
+  SDK-free baseline available before macOS-only workspace verification.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
+- See `docs/plans/2026-06-09-arlo-make-gate-targets.md` for the root gate
+  target baseline.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 
