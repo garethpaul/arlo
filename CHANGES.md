@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Routed waveform updates through an optional outlet helper so storyboard wiring
+  drift cannot crash display-link or recording-stop callbacks.
 - Skipped Wit singleton delegate registration while the committed access-token
   placeholder is empty.
 - Scoped the Wit singleton delegate to the visible view lifecycle and stop

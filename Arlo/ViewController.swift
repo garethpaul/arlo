@@ -31,7 +31,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     private let witAudioPowerChangedNotification = Notification.Name(rawValue: "WITAudioPowerChanged")
     private var currentAudioLevel: CGFloat = 0
     
-    @IBOutlet weak var waveView: SiriWaveformView!
+    @IBOutlet weak var waveView: SiriWaveformView?
     let btnVoiceRecog = WITMicButton()
     var pathLayer: CAShapeLayer!
     
@@ -73,7 +73,11 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
     
     func updateMeters() {
-        waveView.updateWithLevel(currentAudioLevel)
+        updateWaveform(level: currentAudioLevel)
+    }
+
+    private func updateWaveform(level: CGFloat) {
+        waveView?.updateWithLevel(level)
     }
 
     override func didReceiveMemoryWarning() {
@@ -186,7 +190,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     func witDidStopRecording() {
         displayLink?.isPaused = true
         currentAudioLevel = 0
-        waveView.updateWithLevel(0)
+        updateWaveform(level: 0)
     }
     
     func witActivityDetectorStarted() {

@@ -23,6 +23,7 @@ Priority:
 - Keep Wit delegate ownership scoped to the visible voice view lifecycle
 - Keep Wit delegate registration disabled while the committed token is empty
 - Keep waveform rendering resilient to malformed voice-power values
+- Keep waveform updates resilient to missing storyboard outlets
 - Keep iOS privacy permission text specific to the app behavior that exists
 - Keep root lint, test, and build gates tied to the SDK-free iOS baseline
 - Keep UI behavior simple enough to inspect from `ViewController.swift`

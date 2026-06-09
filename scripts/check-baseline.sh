@@ -15,6 +15,7 @@ WAVEFORM_POWER_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-power-finite-
 MAKE_GATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-make-gate-targets.md"
 WIT_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-wit-delegate-lifecycle.md"
 WIT_EMPTY_TOKEN_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-empty-token-delegate-guard.md"
+WAVEFORM_OUTLET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-outlet-guard.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -231,8 +232,28 @@ if ! grep -Fq "return 0" "$VIEW_CONTROLLER"; then
   exit 1
 fi
 
-if ! grep -Fq "waveView.updateWithLevel(currentAudioLevel)" "$VIEW_CONTROLLER"; then
+if ! grep -Fq "@IBOutlet weak var waveView: SiriWaveformView?" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform outlet must be optional so missing storyboard wiring is non-fatal." >&2
+  exit 1
+fi
+
+if ! grep -Fq "private func updateWaveform(level: CGFloat)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform updates must be isolated behind an optional-outlet helper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "waveView?.updateWithLevel(level)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform helper must tolerate a missing waveform outlet." >&2
+  exit 1
+fi
+
+if ! grep -Fq "updateWaveform(level: currentAudioLevel)" "$VIEW_CONTROLLER"; then
   printf '%s\n' "Waveform updates must use the current normalized audio level." >&2
+  exit 1
+fi
+
+if grep -Fq "waveView.updateWithLevel" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Waveform updates must not call an implicitly unwrapped outlet directly." >&2
   exit 1
 fi
 
@@ -421,6 +442,11 @@ if ! grep -Fq "Wit delegate registration is skipped" "$ROOT_DIR/README.md"; then
   exit 1
 fi
 
+if ! grep -Fq "Waveform updates tolerate a missing storyboard outlet" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the waveform outlet guard." >&2
+  exit 1
+fi
+
 if ! grep -Fq "Arlo.xcworkspace" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the CocoaPods workspace entry point." >&2
   exit 1
@@ -443,6 +469,16 @@ fi
 
 if ! grep -Fq "CHANGES.md" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must point to CHANGES.md." >&2
+  exit 1
+fi
+
+if [ ! -f "$WAVEFORM_OUTLET_PLAN" ]; then
+  printf '%s\n' "Arlo waveform outlet guard plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WAVEFORM_OUTLET_PLAN" || ! grep -Fq "make check" "$WAVEFORM_OUTLET_PLAN"; then
+  printf '%s\n' "Arlo waveform outlet guard plan must record completed status and make check verification." >&2
   exit 1
 fi
 
