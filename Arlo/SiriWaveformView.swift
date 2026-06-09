@@ -38,18 +38,22 @@ open class SiriWaveformView: UIView {
     }
     
     override open func draw(_ rect: CGRect) {
-        let context = UIGraphicsGetCurrentContext()
-        context!.clear(bounds)
+        guard let context = UIGraphicsGetCurrentContext(), bounds.width > 0, bounds.height > 0 else {
+            return
+        }
+
+        let renderedWaveCount = max(1, numberOfWaves)
+        let renderedDensity = max(CGFloat(1), density)
+
+        context.clear(bounds)
         backgroundColor?.cgColor
         backgroundColor?.set()
-        context!.fill(rect)
+        context.fill(rect)
         
         // Draw multiple sinus waves, with equal phases but altered
         // amplitudes, multiplied by a parable function.
-        for waveNumber in 0...numberOfWaves {
-            let context = UIGraphicsGetCurrentContext()
-            
-            context!.setLineWidth((waveNumber == 0 ? primaryWaveLineWidth : secondaryWaveLineWidth))
+        for waveNumber in 0...renderedWaveCount {
+            context.setLineWidth((waveNumber == 0 ? primaryWaveLineWidth : secondaryWaveLineWidth))
             
             let halfHeight = bounds.height / 2.0
             let width = bounds.width
@@ -58,7 +62,7 @@ open class SiriWaveformView: UIView {
             let maxAmplitude = halfHeight - 4.0 // 4 corresponds to twice the stroke width
             
             // Progress is a value between 1.0 and -0.5, determined by the current wave idx, which is used to alter the wave's amplitude.
-            let progress: CGFloat = 1.0 - CGFloat(waveNumber) / CGFloat(numberOfWaves)
+            let progress: CGFloat = 1.0 - CGFloat(waveNumber) / CGFloat(renderedWaveCount)
             let normedAmplitude = (1.5 * progress - 0.5) * amplitude
             
             let multiplier: CGFloat = 1.0
@@ -75,15 +79,15 @@ open class SiriWaveformView: UIView {
                 let y = scaling * maxAmplitude * normedAmplitude * CGFloat(sinf(Float(tempCasting))) + halfHeight
                 
                 if x == 0 {
-                    context!.move(to: CGPoint(x: x, y: y))
+                    context.move(to: CGPoint(x: x, y: y))
                 } else {
-                    context!.addLine(to: CGPoint(x: x, y: y))
+                    context.addLine(to: CGPoint(x: x, y: y))
                 }
                 
-                x += density
+                x += renderedDensity
             }
             
-            context!.strokePath()
+            context.strokePath()
         }
     }
 }

@@ -4,6 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 APP_DELEGATE="$ROOT_DIR/Arlo/AppDelegate.swift"
 VIEW_CONTROLLER="$ROOT_DIR/Arlo/ViewController.swift"
+SIRI_WAVEFORM="$ROOT_DIR/Arlo/SiriWaveformView.swift"
 UI_TESTS="$ROOT_DIR/ArloUITests/ArloUITests.swift"
 INFO_PLIST="$ROOT_DIR/Arlo/Info.plist"
 PROJECT_FILE="$ROOT_DIR/Arlo.xcodeproj/project.pbxproj"
@@ -16,6 +17,7 @@ MAKE_GATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-make-gate-targets.md"
 WIT_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-wit-delegate-lifecycle.md"
 WIT_EMPTY_TOKEN_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-empty-token-delegate-guard.md"
 WAVEFORM_OUTLET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-outlet-guard.md"
+WAVEFORM_DRAWING_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-drawing-parameter-guard.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -292,6 +294,31 @@ if ! grep -Fq "logo.isAccessibilityElement = false" "$VIEW_CONTROLLER"; then
   exit 1
 fi
 
+if grep -Fq "context!" "$SIRI_WAVEFORM"; then
+  printf '%s\n' "SiriWaveformView drawing must not force-unwrap the graphics context." >&2
+  exit 1
+fi
+
+if ! grep -Fq "guard let context = UIGraphicsGetCurrentContext(), bounds.width > 0, bounds.height > 0" "$SIRI_WAVEFORM"; then
+  printf '%s\n' "SiriWaveformView drawing must guard missing context and empty bounds." >&2
+  exit 1
+fi
+
+if ! grep -Fq "let renderedWaveCount = max(1, numberOfWaves)" "$SIRI_WAVEFORM"; then
+  printf '%s\n' "SiriWaveformView drawing must clamp inspector wave count before range iteration." >&2
+  exit 1
+fi
+
+if ! grep -Fq "let renderedDensity = max(CGFloat(1), density)" "$SIRI_WAVEFORM"; then
+  printf '%s\n' "SiriWaveformView drawing must clamp inspector density before waveform iteration." >&2
+  exit 1
+fi
+
+if ! grep -Fq "0...renderedWaveCount" "$SIRI_WAVEFORM" || ! grep -Fq "x += renderedDensity" "$SIRI_WAVEFORM"; then
+  printf '%s\n' "SiriWaveformView drawing must use clamped wave count and density values." >&2
+  exit 1
+fi
+
 if ! grep -Fq "testMicrophoneControlStartsDisabledWithoutWitToken" "$UI_TESTS"; then
   printf '%s\n' "UI tests must cover the empty-token microphone accessibility state." >&2
   exit 1
@@ -447,6 +474,11 @@ if ! grep -Fq "Waveform updates tolerate a missing storyboard outlet" "$ROOT_DIR
   exit 1
 fi
 
+if ! grep -Fq "Waveform drawing clamps inspector wave count and density values" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the waveform drawing parameter guard." >&2
+  exit 1
+fi
+
 if ! grep -Fq "Arlo.xcworkspace" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the CocoaPods workspace entry point." >&2
   exit 1
@@ -479,6 +511,16 @@ fi
 
 if ! grep -Fq "status: completed" "$WAVEFORM_OUTLET_PLAN" || ! grep -Fq "make check" "$WAVEFORM_OUTLET_PLAN"; then
   printf '%s\n' "Arlo waveform outlet guard plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$WAVEFORM_DRAWING_PLAN" ]; then
+  printf '%s\n' "Arlo waveform drawing parameter guard plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WAVEFORM_DRAWING_PLAN" || ! grep -Fq "make check" "$WAVEFORM_DRAWING_PLAN"; then
+  printf '%s\n' "Arlo waveform drawing parameter guard plan must record completed status and make check verification." >&2
   exit 1
 fi
 

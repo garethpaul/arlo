@@ -91,6 +91,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   updating the UI.
 - Waveform updates tolerate a missing storyboard outlet through an optional
   update helper.
+- Waveform drawing clamps inspector wave count and density values, and skips
+  drawing when UIKit does not provide a valid graphics context or bounds.
 - With the committed empty Wit token, the microphone control is dimmed and disabled
   so demo builds do not invite recording attempts before local credential setup.
 - The microphone control exposes the `arlo.voice.microphone` accessibility
@@ -113,6 +115,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   empty-token Wit delegate guard.
 - See `docs/plans/2026-06-09-arlo-waveform-outlet-guard.md` for the waveform
   outlet guard.
+- See `docs/plans/2026-06-09-arlo-waveform-drawing-parameter-guard.md` for the
+  waveform drawing parameter guard.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

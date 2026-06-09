@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Guarded waveform drawing against missing graphics contexts, empty bounds, and
+  invalid inspector wave-count or density values.
 - Routed waveform updates through an optional outlet helper so storyboard wiring
   drift cannot crash display-link or recording-stop callbacks.
 - Skipped Wit singleton delegate registration while the committed access-token
