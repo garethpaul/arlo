@@ -20,6 +20,7 @@ Priority:
 - Keep the CocoaPods workspace as the build entry point
 - Avoid committing Wit.ai credentials, generated signing material, or user audio
 - Keep the microphone control accessible and test-addressable
+- Keep waveform rendering resilient to malformed voice-power values
 - Keep iOS privacy permission text specific to the app behavior that exists
 - Keep UI behavior simple enough to inspect from `ViewController.swift`
 

@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Guarded waveform normalization so non-finite Wit audio-power values render as
+  silence instead of reaching the waveform view.
 - Tightened privacy metadata by removing the unused location usage description
   and replacing generic microphone text with user-triggered Wit capture copy.
 - Added a stable `arlo.voice.microphone` accessibility identifier and VoiceOver

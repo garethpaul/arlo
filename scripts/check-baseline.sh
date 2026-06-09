@@ -11,6 +11,7 @@ PODFILE="$ROOT_DIR/Podfile"
 POD_LOCK="$ROOT_DIR/Podfile.lock"
 MIC_ACCESSIBILITY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-mic-accessibility-guard.md"
 PRIVACY_PERMISSION_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-privacy-permission-copy.md"
+WAVEFORM_POWER_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-power-finite-guard.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -39,6 +40,16 @@ fi
 
 if ! grep -Fq "status: completed" "$PRIVACY_PERMISSION_PLAN" || ! grep -Fq "make check" "$PRIVACY_PERMISSION_PLAN"; then
   printf '%s\n' "Arlo privacy permission plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$WAVEFORM_POWER_PLAN" ]; then
+  printf '%s\n' "Arlo waveform power finite guard plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$WAVEFORM_POWER_PLAN" || ! grep -Fq "make check" "$WAVEFORM_POWER_PLAN"; then
+  printf '%s\n' "Arlo waveform power finite guard plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -144,6 +155,16 @@ fi
 
 if ! grep -Fq "normalizedWaveLevel(fromPower" "$VIEW_CONTROLLER"; then
   printf '%s\n' "ViewController must normalize Wit audio power before updating the waveform." >&2
+  exit 1
+fi
+
+if ! grep -Fq "guard power.isFinite else" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must reject non-finite Wit audio power values before updating the waveform." >&2
+  exit 1
+fi
+
+if ! grep -Fq "return 0" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must render silence for invalid waveform levels." >&2
   exit 1
 fi
 
@@ -269,6 +290,11 @@ fi
 
 if ! grep -Fq "WITAudioPowerChanged" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the waveform audio-power baseline." >&2
+  exit 1
+fi
+
+if ! grep -Fq "non-finite Wit audio-power values" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the waveform finite-value guard." >&2
   exit 1
 fi
 

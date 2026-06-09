@@ -135,6 +135,10 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
 
     private func normalizedWaveLevel(fromPower power: Float) -> CGFloat {
+        guard power.isFinite else {
+            return 0
+        }
+
         let normalizedPower = CGFloat((power + 42.0) / 42.0)
         let clampedPower = max(CGFloat(0), min(CGFloat(1), normalizedPower))
         return pow(clampedPower, CGFloat(1.5))

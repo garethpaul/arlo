@@ -84,6 +84,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - The waveform uses Wit `WITAudioPowerChanged` notifications for audio levels
   and keeps the display link limited to animation cadence.
+- The waveform treats non-finite Wit audio-power values as silence before
+  updating the UI.
 - With the committed empty Wit token, the microphone control is dimmed and disabled
   so demo builds do not invite recording attempts before local credential setup.
 - The microphone control exposes the `arlo.voice.microphone` accessibility
