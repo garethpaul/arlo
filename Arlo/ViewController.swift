@@ -68,6 +68,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         logo.frame = CGRect(x:25, y:25, width:25, height: 25)
         logo.center = CGPoint(x: self.view.center.x, y: screenHeight-50)
         logo.contentMode = UIViewContentMode.scaleAspectFit
+        logo.isAccessibilityElement = false
         self.view.addSubview(logo)
         
     }
@@ -119,6 +120,9 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     private func configureVoiceButtonState() {
         btnVoiceRecog.isEnabled = AppDelegate.isWitConfigured
         btnVoiceRecog.alpha = AppDelegate.isWitConfigured ? 1.0 : 0.35
+        btnVoiceRecog.accessibilityIdentifier = "arlo.voice.microphone"
+        btnVoiceRecog.accessibilityLabel = "Voice input"
+        btnVoiceRecog.accessibilityHint = AppDelegate.isWitConfigured ? "Starts voice capture." : "Requires a local Wit access token."
     }
 
     @objc private func audioPowerDidChange(_ notification: Notification) {

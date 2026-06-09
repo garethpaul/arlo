@@ -28,9 +28,12 @@ class ArloUITests: XCTestCase {
         super.tearDown()
     }
     
-    func testExample() {
-        // Use recording to get started writing UI tests.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testMicrophoneControlStartsDisabledWithoutWitToken() {
+        let microphoneButton = XCUIApplication().buttons["arlo.voice.microphone"]
+
+        XCTAssertTrue(microphoneButton.exists)
+        XCTAssertEqual(microphoneButton.label, "Voice input")
+        XCTAssertFalse(microphoneButton.isEnabled)
     }
     
 }

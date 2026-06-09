@@ -19,6 +19,7 @@ Priority:
 - Preserve the voice greeting, microphone button, waveform, and Wit delegate flow
 - Keep the CocoaPods workspace as the build entry point
 - Avoid committing Wit.ai credentials, generated signing material, or user audio
+- Keep the microphone control accessible and test-addressable
 - Keep UI behavior simple enough to inspect from `ViewController.swift`
 
 Next priorities:

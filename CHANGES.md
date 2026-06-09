@@ -1,5 +1,14 @@
 # Arlo Changes
 
+## 2026-06-09
+
+- Added a stable `arlo.voice.microphone` accessibility identifier and VoiceOver
+  label/hint to the Wit microphone control.
+- Hid the decorative microphone logo from accessibility focus and replaced the
+  generated empty UI test with a disabled empty-token microphone assertion.
+- Extended the SDK-free baseline and README notes for the microphone
+  accessibility contract.
+
 ## 2026-06-08
 
 - Disabled the Wit mic button while the committed access token placeholder is

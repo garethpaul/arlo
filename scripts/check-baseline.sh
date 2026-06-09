@@ -4,10 +4,12 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 APP_DELEGATE="$ROOT_DIR/Arlo/AppDelegate.swift"
 VIEW_CONTROLLER="$ROOT_DIR/Arlo/ViewController.swift"
+UI_TESTS="$ROOT_DIR/ArloUITests/ArloUITests.swift"
 INFO_PLIST="$ROOT_DIR/Arlo/Info.plist"
 PROJECT_FILE="$ROOT_DIR/Arlo.xcodeproj/project.pbxproj"
 PODFILE="$ROOT_DIR/Podfile"
 POD_LOCK="$ROOT_DIR/Podfile.lock"
+MIC_ACCESSIBILITY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-mic-accessibility-guard.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -16,6 +18,16 @@ fi
 
 if ! grep -Fq "Arlo Changes" "$ROOT_DIR/CHANGES.md"; then
   printf '%s\n' "CHANGES.md must identify the project." >&2
+  exit 1
+fi
+
+if [ ! -f "$MIC_ACCESSIBILITY_PLAN" ]; then
+  printf '%s\n' "Arlo mic accessibility plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$MIC_ACCESSIBILITY_PLAN" || ! grep -Fq "make check" "$MIC_ACCESSIBILITY_PLAN"; then
+  printf '%s\n' "Arlo mic accessibility plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -144,6 +156,41 @@ if ! grep -Fq "btnVoiceRecog.alpha = AppDelegate.isWitConfigured ? 1.0 : 0.35" "
   exit 1
 fi
 
+if ! grep -Fq 'btnVoiceRecog.accessibilityIdentifier = "arlo.voice.microphone"' "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Voice button must expose a stable accessibility identifier." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'btnVoiceRecog.accessibilityLabel = "Voice input"' "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Voice button must expose an accessibility label." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Requires a local Wit access token." "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Voice button must explain the empty-token disabled state to accessibility clients." >&2
+  exit 1
+fi
+
+if ! grep -Fq "logo.isAccessibilityElement = false" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Decorative microphone logo must not duplicate voice button accessibility focus." >&2
+  exit 1
+fi
+
+if ! grep -Fq "testMicrophoneControlStartsDisabledWithoutWitToken" "$UI_TESTS"; then
+  printf '%s\n' "UI tests must cover the empty-token microphone accessibility state." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'buttons["arlo.voice.microphone"]' "$UI_TESTS"; then
+  printf '%s\n' "UI tests must locate the microphone control by accessibility identifier." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'XCTAssertFalse(microphoneButton.isEnabled)' "$UI_TESTS"; then
+  printf '%s\n' "UI tests must assert the microphone control starts disabled without a token." >&2
+  exit 1
+fi
+
 if ! grep -Fq "NSMicrophoneUsageDescription" "$INFO_PLIST"; then
   printf '%s\n' "Microphone permission usage description must be present." >&2
   exit 1
@@ -206,6 +253,11 @@ fi
 
 if ! grep -Fq "The voice button stays disabled until a non-empty local Wit access token is supplied" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the empty-token voice button guard." >&2
+  exit 1
+fi
+
+if ! grep -Fq "arlo.voice.microphone" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the microphone accessibility identifier." >&2
   exit 1
 fi
 
