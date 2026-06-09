@@ -14,6 +14,7 @@ PRIVACY_PERMISSION_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-privacy-permission
 WAVEFORM_POWER_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-power-finite-guard.md"
 MAKE_GATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-make-gate-targets.md"
 WIT_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-wit-delegate-lifecycle.md"
+WIT_EMPTY_TOKEN_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-empty-token-delegate-guard.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -72,6 +73,16 @@ fi
 
 if ! grep -Fq "Status: Completed" "$WIT_DELEGATE_PLAN" || ! grep -Fq "make check" "$WIT_DELEGATE_PLAN"; then
   printf '%s\n' "Arlo Wit delegate lifecycle plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$WIT_EMPTY_TOKEN_DELEGATE_PLAN" ]; then
+  printf '%s\n' "Arlo empty-token Wit delegate guard plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WIT_EMPTY_TOKEN_DELEGATE_PLAN" || ! grep -Fq "make check" "$WIT_EMPTY_TOKEN_DELEGATE_PLAN"; then
+  printf '%s\n' "Arlo empty-token Wit delegate guard plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -142,6 +153,11 @@ fi
 
 if ! grep -Fq "configureWitDelegate()" "$VIEW_CONTROLLER"; then
   printf '%s\n' "Wit delegate assignment must be scoped through a lifecycle helper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "if AppDelegate.isWitConfigured {" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Wit delegate assignment must be skipped while the committed token placeholder is empty." >&2
   exit 1
 fi
 
@@ -397,6 +413,11 @@ fi
 
 if ! grep -Fq "Wit delegate is registered only while the view is visible" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the Wit delegate lifecycle guard." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Wit delegate registration is skipped" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the empty-token Wit delegate guard." >&2
   exit 1
 fi
 

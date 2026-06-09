@@ -21,6 +21,7 @@ Priority:
 - Avoid committing Wit.ai credentials, generated signing material, or user audio
 - Keep the microphone control accessible and test-addressable
 - Keep Wit delegate ownership scoped to the visible voice view lifecycle
+- Keep Wit delegate registration disabled while the committed token is empty
 - Keep waveform rendering resilient to malformed voice-power values
 - Keep iOS privacy permission text specific to the app behavior that exists
 - Keep root lint, test, and build gates tied to the SDK-free iOS baseline

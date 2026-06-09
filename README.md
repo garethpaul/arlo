@@ -95,6 +95,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   identifier for UI tests and assistive technology.
 - Wit delegate is registered only while the view is visible, and active voice
   capture is stopped when the view disappears.
+- Wit delegate registration is skipped while the committed token placeholder is
+  empty.
 - The microphone permission text describes user-triggered Wit voice capture, and
   no location permission text is declared because this source tree has no
   location flow.
@@ -105,6 +107,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   target baseline.
 - See `docs/plans/2026-06-09-arlo-wit-delegate-lifecycle.md` for the Wit
   delegate lifecycle guard.
+- See `docs/plans/2026-06-09-arlo-empty-token-delegate-guard.md` for the
+  empty-token Wit delegate guard.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

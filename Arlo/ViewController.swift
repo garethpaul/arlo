@@ -121,7 +121,11 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
 
     private func configureWitDelegate() {
-        Wit.sharedInstance().delegate = self
+        if AppDelegate.isWitConfigured {
+            Wit.sharedInstance().delegate = self
+        } else {
+            clearWitDelegate()
+        }
     }
 
     private func clearWitDelegate() {

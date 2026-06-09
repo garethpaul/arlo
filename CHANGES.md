@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Skipped Wit singleton delegate registration while the committed access-token
+  placeholder is empty.
 - Scoped the Wit singleton delegate to the visible view lifecycle and stop
   active voice capture when the view disappears.
 - Added root `make lint`, `make test`, `make build`, and `make check` gates
