@@ -37,7 +37,6 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        Wit.sharedInstance().delegate = self
         
 
        let utter = AVSpeechUtterance(string:"Hello my name is Arlo, talk to me!")
@@ -83,17 +82,21 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        configureWitDelegate()
         configureDisplayLink()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        stopVoiceCaptureIfNeeded()
+        clearWitDelegate()
         invalidateDisplayLink()
         talker.stopSpeaking(at: .immediate)
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        clearWitDelegate()
         invalidateDisplayLink()
     }
 
@@ -115,6 +118,18 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
 
     private func configureAudioPowerObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(ViewController.audioPowerDidChange(_:)), name: witAudioPowerChangedNotification, object: nil)
+    }
+
+    private func configureWitDelegate() {
+        Wit.sharedInstance().delegate = self
+    }
+
+    private func clearWitDelegate() {
+        Wit.sharedInstance().delegate = nil
+    }
+
+    private func stopVoiceCaptureIfNeeded() {
+        Wit.sharedInstance().stop()
     }
 
     private func configureVoiceButtonState() {

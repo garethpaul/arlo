@@ -93,6 +93,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   so demo builds do not invite recording attempts before local credential setup.
 - The microphone control exposes the `arlo.voice.microphone` accessibility
   identifier for UI tests and assistive technology.
+- Wit delegate is registered only while the view is visible, and active voice
+  capture is stopped when the view disappears.
 - The microphone permission text describes user-triggered Wit voice capture, and
   no location permission text is declared because this source tree has no
   location flow.
@@ -101,6 +103,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `docs/plans/2026-06-09-arlo-make-gate-targets.md` for the root gate
   target baseline.
+- See `docs/plans/2026-06-09-arlo-wit-delegate-lifecycle.md` for the Wit
+  delegate lifecycle guard.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

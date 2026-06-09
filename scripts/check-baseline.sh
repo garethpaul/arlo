@@ -13,6 +13,7 @@ MIC_ACCESSIBILITY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-mic-accessibility-g
 PRIVACY_PERMISSION_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-privacy-permission-copy.md"
 WAVEFORM_POWER_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-power-finite-guard.md"
 MAKE_GATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-make-gate-targets.md"
+WIT_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-wit-delegate-lifecycle.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -61,6 +62,16 @@ fi
 
 if ! grep -Fq "Status: Completed" "$MAKE_GATE_PLAN" || ! grep -Fq "make check" "$MAKE_GATE_PLAN"; then
   printf '%s\n' "Arlo make gate plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$WIT_DELEGATE_PLAN" ]; then
+  printf '%s\n' "Arlo Wit delegate lifecycle plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$WIT_DELEGATE_PLAN" || ! grep -Fq "make check" "$WIT_DELEGATE_PLAN"; then
+  printf '%s\n' "Arlo Wit delegate lifecycle plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -126,6 +137,31 @@ fi
 
 if ! grep -Fq "configureDisplayLink()" "$VIEW_CONTROLLER"; then
   printf '%s\n' "Waveform display link must be configured through a lifecycle helper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "configureWitDelegate()" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Wit delegate assignment must be scoped through a lifecycle helper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "clearWitDelegate()" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Wit delegate cleanup must be scoped through a lifecycle helper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Wit.sharedInstance().delegate = nil" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must clear the strong Wit singleton delegate when leaving the view." >&2
+  exit 1
+fi
+
+if ! grep -Fq "stopVoiceCaptureIfNeeded()" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must stop active Wit voice capture when leaving the view." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Wit.sharedInstance().stop()" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must stop active Wit recording before teardown." >&2
   exit 1
 fi
 
@@ -356,6 +392,11 @@ fi
 
 if ! grep -Fq "microphone permission text" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the microphone permission text baseline." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Wit delegate is registered only while the view is visible" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the Wit delegate lifecycle guard." >&2
   exit 1
 fi
 

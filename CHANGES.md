@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Scoped the Wit singleton delegate to the visible view lifecycle and stop
+  active voice capture when the view disappears.
 - Added root `make lint`, `make test`, `make build`, and `make check` gates
   around the SDK-free Arlo baseline and documented Xcode scheme limits.
 - Guarded waveform normalization so non-finite Wit audio-power values render as
