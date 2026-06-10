@@ -27,6 +27,7 @@ Priority:
 - Keep waveform drawing resilient to invalid inspector parameters
 - Keep iOS privacy permission text specific to the app behavior that exists
 - Keep root lint, test, and build gates tied to the SDK-free iOS baseline
+- Keep GitHub Actions aligned with the SDK-free `make check` baseline
 - Keep UI behavior simple enough to inspect from `ViewController.swift`
 
 Next priorities:

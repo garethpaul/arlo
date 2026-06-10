@@ -67,6 +67,11 @@ Open `Arlo.xcworkspace` in Xcode for simulator or device verification. The legac
 
 This host does not have `xcodebuild`, `pod`, or `swift`, so full build, test, and CocoaPods verification must happen on a macOS machine with the matching legacy toolchain. The root `make test` and `make build` targets preserve the source preflight and report that Xcode workspace verification requires a checked-out macOS environment because no shared build or UI-test scheme is checked in.
 
+GitHub Actions runs the SDK-free `make check` baseline on Ubuntu for pushes,
+pull requests, and manual dispatches. The workflow uses a commit-pinned
+checkout action, read-only repository access, and a bounded runtime. Full
+workspace and simulator verification remain a macOS legacy toolchain task.
+
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
@@ -117,6 +122,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   outlet guard.
 - See `docs/plans/2026-06-09-arlo-waveform-drawing-parameter-guard.md` for the
   waveform drawing parameter guard.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions static
+  baseline.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

@@ -1,5 +1,12 @@
 # Arlo Changes
 
+## 2026-06-10
+
+- Added a GitHub Actions workflow that runs the SDK-free `make check` baseline
+  while keeping full workspace verification scoped to a macOS legacy toolchain.
+- Pinned the checkout action and limited the workflow token to read-only
+  repository access with bounded execution.
+
 ## 2026-06-09
 
 - Guarded waveform drawing against missing graphics contexts, empty bounds, and

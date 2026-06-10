@@ -18,6 +18,8 @@ WIT_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-wit-delegate-lifecycle.m
 WIT_EMPTY_TOKEN_DELEGATE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-empty-token-delegate-guard.md"
 WAVEFORM_OUTLET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-outlet-guard.md"
 WAVEFORM_DRAWING_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-drawing-parameter-guard.md"
+CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
+CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -26,6 +28,41 @@ fi
 
 if ! grep -Fq "Arlo Changes" "$ROOT_DIR/CHANGES.md"; then
   printf '%s\n' "CHANGES.md must identify the project." >&2
+  exit 1
+fi
+
+if [ ! -f "$CI_WORKFLOW" ]; then
+  printf '%s\n' "GitHub Actions workflow is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "ubuntu-latest" "$CI_WORKFLOW" || ! grep -Fq "make check" "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions workflow must run the SDK-free make check baseline." >&2
+  exit 1
+fi
+
+if ! grep -Fq "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions must pin actions/checkout to the reviewed commit." >&2
+  exit 1
+fi
+
+if ! grep -Fq "permissions:" "$CI_WORKFLOW" || ! grep -Fq "contents: read" "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions must keep repository access read-only." >&2
+  exit 1
+fi
+
+if ! grep -Fq "workflow_dispatch:" "$CI_WORKFLOW" || ! grep -Fq "timeout-minutes: 5" "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions must support bounded manual verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$CI_PLAN" ]; then
+  printf '%s\n' "Arlo CI baseline plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$CI_PLAN" || ! grep -Fq "make check" "$CI_PLAN"; then
+  printf '%s\n' "Arlo CI baseline plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -416,6 +453,11 @@ fi
 
 if ! grep -Fq "make check" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the make check wrapper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the GitHub Actions baseline." >&2
   exit 1
 fi
 
