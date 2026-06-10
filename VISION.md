@@ -21,6 +21,8 @@ Priority:
 - Avoid committing Wit.ai credentials, generated signing material, or user audio
 - Keep the microphone control accessible and test-addressable
 - Keep Wit delegate ownership scoped to the visible voice view lifecycle
+- Keep Wit singleton teardown conditional on the calling controller still
+  owning the delegate
 - Keep Wit delegate registration disabled while the committed token is empty
 - Keep waveform rendering resilient to malformed voice-power values
 - Keep waveform updates resilient to missing storyboard outlets

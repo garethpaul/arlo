@@ -20,6 +20,7 @@ WAVEFORM_OUTLET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-outlet-guard
 WAVEFORM_DRAWING_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-drawing-parameter-guard.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
+WIT_DELEGATE_OWNERSHIP_PLAN="$ROOT_DIR/docs/plans/2026-06-10-arlo-wit-delegate-ownership.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -36,7 +37,7 @@ if [ ! -f "$CI_WORKFLOW" ]; then
   exit 1
 fi
 
-if ! grep -Fq "ubuntu-latest" "$CI_WORKFLOW" || ! grep -Fq "make check" "$CI_WORKFLOW"; then
+if ! grep -Fq "ubuntu-24.04" "$CI_WORKFLOW" || ! grep -Fq "make check" "$CI_WORKFLOW"; then
   printf '%s\n' "GitHub Actions workflow must run the SDK-free make check baseline." >&2
   exit 1
 fi
@@ -56,6 +57,11 @@ if ! grep -Fq "workflow_dispatch:" "$CI_WORKFLOW" || ! grep -Fq "timeout-minutes
   exit 1
 fi
 
+if ! grep -Fq "cancel-in-progress: true" "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions must cancel superseded baseline runs." >&2
+  exit 1
+fi
+
 if [ ! -f "$CI_PLAN" ]; then
   printf '%s\n' "Arlo CI baseline plan is missing." >&2
   exit 1
@@ -63,6 +69,16 @@ fi
 
 if ! grep -Fq "status: completed" "$CI_PLAN" || ! grep -Fq "make check" "$CI_PLAN"; then
   printf '%s\n' "Arlo CI baseline plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$WIT_DELEGATE_OWNERSHIP_PLAN" ]; then
+  printf '%s\n' "Arlo Wit delegate ownership plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$WIT_DELEGATE_OWNERSHIP_PLAN" || ! grep -Fq "make check" "$WIT_DELEGATE_OWNERSHIP_PLAN"; then
+  printf '%s\n' "Arlo Wit delegate ownership plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -201,23 +217,38 @@ if ! grep -Fq "if AppDelegate.isWitConfigured {" "$VIEW_CONTROLLER"; then
   exit 1
 fi
 
-if ! grep -Fq "clearWitDelegate()" "$VIEW_CONTROLLER"; then
-  printf '%s\n' "Wit delegate cleanup must be scoped through a lifecycle helper." >&2
+if ! grep -Fq "releaseWitDelegateIfOwned(stopCapture:" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Wit delegate cleanup must be scoped through an ownership-aware lifecycle helper." >&2
   exit 1
 fi
 
-if ! grep -Fq "Wit.sharedInstance().delegate = nil" "$VIEW_CONTROLLER"; then
-  printf '%s\n' "ViewController must clear the strong Wit singleton delegate when leaving the view." >&2
+if ! grep -Fq "guard wit.delegate === self else" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must verify Wit delegate ownership before singleton teardown." >&2
   exit 1
 fi
 
-if ! grep -Fq "stopVoiceCaptureIfNeeded()" "$VIEW_CONTROLLER"; then
-  printf '%s\n' "ViewController must stop active Wit voice capture when leaving the view." >&2
+if ! grep -Fq "releaseWitDelegateIfOwned(stopCapture: true)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must release owned Wit capture when leaving the view." >&2
   exit 1
 fi
 
-if ! grep -Fq "Wit.sharedInstance().stop()" "$VIEW_CONTROLLER"; then
+if [ "$(grep -Fc "releaseWitDelegateIfOwned(stopCapture: true)" "$VIEW_CONTROLLER")" -ne 2 ]; then
+  printf '%s\n' "ViewController must release owned Wit capture during disappearance and deinitialization." >&2
+  exit 1
+fi
+
+if ! grep -Fq "releaseWitDelegateIfOwned(stopCapture: false)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must release only its owned delegate when Wit is unconfigured." >&2
+  exit 1
+fi
+
+if ! grep -Fq "wit.stop()" "$VIEW_CONTROLLER"; then
   printf '%s\n' "ViewController must stop active Wit recording before teardown." >&2
+  exit 1
+fi
+
+if ! grep -Fq "wit.delegate = nil" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must clear the strong Wit singleton delegate it owns." >&2
   exit 1
 fi
 
@@ -426,7 +457,12 @@ if [ ! -f "$ROOT_DIR/Makefile" ]; then
   exit 1
 fi
 
-if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/Makefile"; then
+if ! grep -Fq 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must resolve repository-root commands from its own location." >&2
+  exit 1
+fi
+
+if ! grep -Fq '$(ROOT)scripts/check-baseline.sh' "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile must run the SDK-free baseline check." >&2
   exit 1
 fi
@@ -503,6 +539,11 @@ fi
 
 if ! grep -Fq "Wit delegate is registered only while the view is visible" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the Wit delegate lifecycle guard." >&2
+  exit 1
+fi
+
+if ! grep -Fq "still owns the Wit singleton" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the Wit delegate ownership guard." >&2
   exit 1
 fi
 

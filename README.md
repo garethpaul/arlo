@@ -104,13 +104,17 @@ When the required SDK or runtime is unavailable, use static checks and source re
   identifier for UI tests and assistive technology.
 - Wit delegate is registered only while the view is visible, and active voice
   capture is stopped when the view disappears.
+- A disappearing controller only stops capture or clears the delegate when it
+  still owns the Wit singleton, so stale lifecycle callbacks cannot interrupt a
+  newer visible voice screen.
 - Wit delegate registration is skipped while the committed token placeholder is
   empty.
 - The microphone permission text describes user-triggered Wit voice capture, and
   no location permission text is declared because this source tree has no
   location flow.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the
-  SDK-free baseline available before macOS-only workspace verification.
+  SDK-free baseline available before macOS-only workspace verification,
+  including when invoked outside the repository root with `make -f`.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `docs/plans/2026-06-09-arlo-make-gate-targets.md` for the root gate
   target baseline.
@@ -124,6 +128,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   waveform drawing parameter guard.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the GitHub Actions static
   baseline.
+- See `docs/plans/2026-06-10-arlo-wit-delegate-ownership.md` for the singleton
+  delegate ownership guard.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

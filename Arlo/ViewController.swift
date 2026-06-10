@@ -92,15 +92,14 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        stopVoiceCaptureIfNeeded()
-        clearWitDelegate()
+        releaseWitDelegateIfOwned(stopCapture: true)
         invalidateDisplayLink()
         talker.stopSpeaking(at: .immediate)
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
-        clearWitDelegate()
+        releaseWitDelegateIfOwned(stopCapture: true)
         invalidateDisplayLink()
     }
 
@@ -128,16 +127,20 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         if AppDelegate.isWitConfigured {
             Wit.sharedInstance().delegate = self
         } else {
-            clearWitDelegate()
+            releaseWitDelegateIfOwned(stopCapture: false)
         }
     }
 
-    private func clearWitDelegate() {
-        Wit.sharedInstance().delegate = nil
-    }
+    private func releaseWitDelegateIfOwned(stopCapture: Bool) {
+        let wit = Wit.sharedInstance()
+        guard wit.delegate === self else {
+            return
+        }
 
-    private func stopVoiceCaptureIfNeeded() {
-        Wit.sharedInstance().stop()
+        if stopCapture {
+            wit.stop()
+        }
+        wit.delegate = nil
     }
 
     private func configureVoiceButtonState() {

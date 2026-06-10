@@ -1,12 +1,13 @@
 .PHONY: build check lint test verify
 
 XCODEBUILD ?= xcodebuild
+ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 lint:
-	scripts/check-baseline.sh
+	$(ROOT)scripts/check-baseline.sh
 
 test:
-	scripts/check-baseline.sh
+	$(ROOT)scripts/check-baseline.sh
 	@if command -v "$(XCODEBUILD)" >/dev/null 2>&1; then \
 		echo "xcodebuild found, but no shared UI-test scheme is checked in; run ArloUITests from Arlo.xcworkspace with the legacy toolchain."; \
 	else \
@@ -14,7 +15,7 @@ test:
 	fi
 
 build:
-	scripts/check-baseline.sh
+	$(ROOT)scripts/check-baseline.sh
 	@if command -v "$(XCODEBUILD)" >/dev/null 2>&1; then \
 		echo "xcodebuild found, but no shared build scheme is checked in; build Arlo.xcworkspace with the legacy Swift 3.0 toolchain."; \
 	else \

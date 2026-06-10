@@ -2,6 +2,10 @@
 
 ## 2026-06-10
 
+- Made Wit singleton teardown ownership-aware so stale view lifecycle callbacks
+  cannot stop capture or clear the delegate of a newer visible controller.
+- Made root Makefile checks location-independent and pinned CI to the stable
+  Ubuntu 24.04 runner image.
 - Added a GitHub Actions workflow that runs the SDK-free `make check` baseline
   while keeping full workspace verification scoped to a macOS legacy toolchain.
 - Pinned the checkout action and limited the workflow token to read-only
