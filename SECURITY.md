@@ -33,6 +33,9 @@ Helpful reports include:
 - GitHub Actions runs only the SDK-free `make check` baseline. Do not add
   signing, deployment, voice-service credentials, or live device steps to the
   hosted workflow without a separate security review.
+- Keep asynchronous Wit audio and recording state confined to the main queue,
+  ignore late power notifications after capture stops, and reject stale start
+  callbacks after the voice view becomes inactive.
 - The hosted workflow uses a commit-pinned checkout action, read-only repository
   access, and a bounded runtime.
 

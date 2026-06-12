@@ -21,6 +21,7 @@ WAVEFORM_DRAWING_PLAN="$ROOT_DIR/docs/plans/2026-06-09-arlo-waveform-drawing-par
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 WIT_DELEGATE_OWNERSHIP_PLAN="$ROOT_DIR/docs/plans/2026-06-10-arlo-wit-delegate-ownership.md"
+AUDIO_MAIN_THREAD_PLAN="$ROOT_DIR/docs/plans/2026-06-12-arlo-audio-main-thread-state.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -79,6 +80,16 @@ fi
 
 if ! grep -Fq "Status: Completed" "$WIT_DELEGATE_OWNERSHIP_PLAN" || ! grep -Fq "make check" "$WIT_DELEGATE_OWNERSHIP_PLAN"; then
   printf '%s\n' "Arlo Wit delegate ownership plan must record completed status and make check verification." >&2
+  exit 1
+fi
+
+if [ ! -f "$AUDIO_MAIN_THREAD_PLAN" ]; then
+  printf '%s\n' "Arlo audio main-thread state plan is missing." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$AUDIO_MAIN_THREAD_PLAN" || ! grep -Fq "make check" "$AUDIO_MAIN_THREAD_PLAN"; then
+  printf '%s\n' "Arlo audio main-thread state plan must record completed status and make check verification." >&2
   exit 1
 fi
 
@@ -252,13 +263,50 @@ if ! grep -Fq "wit.delegate = nil" "$VIEW_CONTROLLER"; then
   exit 1
 fi
 
-if ! grep -Fq "displayLink?.isPaused = false" "$VIEW_CONTROLLER"; then
-  printf '%s\n' "Waveform display link must resume when Wit starts recording." >&2
+if ! grep -Fq "strongSelf.applyRecordingState(true)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Wit recording start must resume waveform state through the centralized helper." >&2
   exit 1
 fi
 
-if ! grep -Fq "displayLink?.isPaused = true" "$VIEW_CONTROLLER"; then
-  printf '%s\n' "Waveform display link must pause when recording stops or the view disappears." >&2
+if [ "$(grep -Fc "self?.applyRecordingState(false)" "$VIEW_CONTROLLER")" -ne 2 ]; then
+  printf '%s\n' "Recording stop and view disappearance must reset waveform state through the centralized helper." >&2
+  exit 1
+fi
+
+if ! grep -Fq "private var isRecording = false" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "ViewController must track whether Wit recording is active." >&2
+  exit 1
+fi
+
+if ! grep -Fq "private var isViewActive = false" "$VIEW_CONTROLLER" || \
+   ! grep -Fq "isViewActive = true" "$VIEW_CONTROLLER" || \
+   ! grep -Fq "isViewActive = false" "$VIEW_CONTROLLER" || \
+   ! grep -Fq "guard let strongSelf = self, strongSelf.isViewActive else" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Late Wit recording-start callbacks must not reactivate an inactive view." >&2
+  exit 1
+fi
+
+if ! grep -Fq "private func performOnMain(_ work: @escaping () -> Void)" "$VIEW_CONTROLLER" || \
+   ! grep -Fq "Thread.isMainThread" "$VIEW_CONTROLLER" || \
+   ! grep -Fq "DispatchQueue.main.async(execute: work)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Wit callback state must use the shared main-thread execution helper." >&2
+  exit 1
+fi
+
+if [ "$(grep -Fc "performOnMain { [weak self] in" "$VIEW_CONTROLLER")" -lt 4 ]; then
+  printf '%s\n' "Audio notification, recording callbacks, and view teardown must capture the controller weakly on the main queue." >&2
+  exit 1
+fi
+
+if ! grep -Fq "guard let strongSelf = self, strongSelf.isRecording else" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Late Wit audio power updates must be ignored while recording is inactive." >&2
+  exit 1
+fi
+
+if ! grep -Fq "private func applyRecordingState(_ recording: Bool)" "$VIEW_CONTROLLER" || \
+   ! grep -Fq "displayLink?.isPaused = !recording" "$VIEW_CONTROLLER" || \
+   ! grep -Fq "updateWaveform(level: 0)" "$VIEW_CONTROLLER"; then
+  printf '%s\n' "Recording start and stop state must be centralized and reset the waveform." >&2
   exit 1
 fi
 
