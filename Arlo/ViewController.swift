@@ -30,6 +30,8 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     var displayLink: CADisplayLink?
     private let witAudioPowerChangedNotification = Notification.Name(rawValue: "WITAudioPowerChanged")
     private var currentAudioLevel: CGFloat = 0
+    private var isRecording = false
+    private var isViewActive = false
     
     @IBOutlet weak var waveView: SiriWaveformView?
     let btnVoiceRecog = WITMicButton()
@@ -86,12 +88,17 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        isViewActive = true
         configureWitDelegate()
         configureDisplayLink()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        isViewActive = false
+        performOnMain { [weak self] in
+            self?.applyRecordingState(false)
+        }
         releaseWitDelegateIfOwned(stopCapture: true)
         invalidateDisplayLink()
         talker.stopSpeaking(at: .immediate)
@@ -152,12 +159,33 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
 
     @objc private func audioPowerDidChange(_ notification: Notification) {
-        guard let power = notification.object as? NSNumber else {
-            currentAudioLevel = 0
-            return
-        }
+        let level = (notification.object as? NSNumber).map {
+            normalizedWaveLevel(fromPower: $0.floatValue)
+        } ?? 0
 
-        currentAudioLevel = normalizedWaveLevel(fromPower: power.floatValue)
+        performOnMain { [weak self] in
+            guard let strongSelf = self, strongSelf.isRecording else {
+                return
+            }
+            strongSelf.currentAudioLevel = level
+        }
+    }
+
+    private func performOnMain(_ work: @escaping () -> Void) {
+        if Thread.isMainThread {
+            work()
+        } else {
+            DispatchQueue.main.async(execute: work)
+        }
+    }
+
+    private func applyRecordingState(_ recording: Bool) {
+        isRecording = recording
+        currentAudioLevel = 0
+        displayLink?.isPaused = !recording
+        if !recording {
+            updateWaveform(level: 0)
+        }
     }
 
     private func normalizedWaveLevel(fromPower power: Float) -> CGFloat {
@@ -186,14 +214,18 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
     
     func witDidStartRecording() {
-        currentAudioLevel = 0
-        displayLink?.isPaused = false
+        performOnMain { [weak self] in
+            guard let strongSelf = self, strongSelf.isViewActive else {
+                return
+            }
+            strongSelf.applyRecordingState(true)
+        }
     }
     
     func witDidStopRecording() {
-        displayLink?.isPaused = true
-        currentAudioLevel = 0
-        updateWaveform(level: 0)
+        performOnMain { [weak self] in
+            self?.applyRecordingState(false)
+        }
     }
     
     func witActivityDetectorStarted() {

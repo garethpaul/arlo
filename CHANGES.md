@@ -1,5 +1,14 @@
 # Arlo Changes
 
+## 2026-06-12
+
+- Confined Wit audio-power and recording callback UI state to the main queue.
+- Added explicit recording state so late audio notifications cannot restore a
+  stale waveform after capture stops.
+- Prevented queued recording-start callbacks from reactivating an off-screen
+  voice controller.
+- Centralized recording start/stop display-link and waveform reset behavior.
+
 ## 2026-06-10
 
 - Made Wit singleton teardown ownership-aware so stale view lifecycle callbacks

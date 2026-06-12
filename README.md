@@ -94,6 +94,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
   and keeps the display link limited to animation cadence.
 - The waveform treats non-finite Wit audio-power values as silence before
   updating the UI.
+- Wit audio-power notifications and recording callbacks confine waveform and
+  display-link state to the main queue, ignore late levels while inactive, and
+  clear the waveform when capture stops. Late recording-start callbacks cannot
+  reactivate an off-screen controller.
 - Waveform updates tolerate a missing storyboard outlet through an optional
   update helper.
 - Waveform drawing clamps inspector wave count and density values, and skips
@@ -130,6 +134,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   baseline.
 - See `docs/plans/2026-06-10-arlo-wit-delegate-ownership.md` for the singleton
   delegate ownership guard.
+- See `docs/plans/2026-06-12-arlo-audio-main-thread-state.md` for main-thread
+  waveform state and late-notification guards.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

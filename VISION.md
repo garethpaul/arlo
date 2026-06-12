@@ -25,6 +25,9 @@ Priority:
   owning the delegate
 - Keep Wit delegate registration disabled while the committed token is empty
 - Keep waveform rendering resilient to malformed voice-power values
+- Keep asynchronous audio and recording UI state confined to the main queue
+- Ignore late Wit audio levels after recording becomes inactive
+- Prevent stale Wit recording-start callbacks from reactivating hidden views
 - Keep waveform updates resilient to missing storyboard outlets
 - Keep waveform drawing resilient to invalid inspector parameters
 - Keep iOS privacy permission text specific to the app behavior that exists
