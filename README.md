@@ -71,6 +71,7 @@ GitHub Actions runs the SDK-free `make check` baseline on Ubuntu for pushes,
 pull requests, and manual dispatches. The workflow uses a commit-pinned
 checkout action, read-only repository access, and a bounded runtime. Full
 workspace and simulator verification remain a macOS legacy toolchain task.
+The job does not persist checkout credentials after source retrieval.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

@@ -2,6 +2,8 @@
 
 ## 2026-06-12
 
+- Disabled checkout credential persistence in the canonical SDK-free Check job
+  and added exact repository contracts for that boundary.
 - Confined Wit audio-power and recording callback UI state to the main queue.
 - Added explicit recording state so late audio notifications cannot restore a
   stale waveform after capture stops.
