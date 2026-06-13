@@ -139,6 +139,10 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     }
 
     private func releaseWitDelegateIfOwned(stopCapture: Bool) {
+        guard AppDelegate.isWitConfigured else {
+            return
+        }
+
         let wit = Wit.sharedInstance()
         guard wit.delegate === self else {
             return

@@ -1,13 +1,13 @@
 ---
 title: Arlo Empty-Token Wit Singleton Isolation
 type: privacy
-status: planned
+status: completed
 date: 2026-06-13
 ---
 
 # Arlo Empty-Token Wit Singleton Isolation
 
-## Status: Planned
+## Status: Completed
 
 ## Problem Frame
 
@@ -74,10 +74,16 @@ Approach:
 - Add isolated hostile mutations for missing, misplaced, and bypassed guards,
   configured behavior, documentation, and completed plan evidence.
 
-## Verification Plan
+## Verification
 
-- Run `make check` from the repository and by absolute path from `/tmp`.
-- Run `sh -n scripts/check-baseline.sh` and `git diff --check`.
-- Require each isolated hostile mutation to fail the static checker.
-- Record simulator, Swift compilation, microphone, Wit request, and physical
-  device verification as unavailable rather than inferred.
+- `make check` passed the SDK-free Arlo privacy baseline, lint wrapper, test
+  wrapper, and build wrapper.
+- Absolute-path `make check` passed from `/tmp`.
+- `sh -n scripts/check-baseline.sh` and `git diff --check` passed.
+- Ten isolated hostile mutations were rejected across the launch guard, launch
+  ordering, configured token assignment, speech-stop configuration, teardown
+  guard, teardown ordering, delegate ownership, capture stop, delegate clear,
+  and README evidence.
+- Tooling is unavailable; no simulator, Swift compilation, microphone, Wit
+  request, or physical-device execution is claimed because this host has no
+  `xcodebuild`, `swift`, or `pod`.

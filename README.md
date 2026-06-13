@@ -116,6 +116,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   newer visible voice screen.
 - Wit delegate registration is skipped while the committed token placeholder is
   empty.
+- The empty-token lifecycle does not initialize the Wit singleton during launch
+  configuration or delegate teardown; configured local builds retain token,
+  speech-stop, capture-stop, and ownership behavior.
 - The microphone permission text describes user-triggered Wit voice capture, and
   no location permission text is declared because this source tree has no
   location flow.
@@ -141,6 +144,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   waveform state and late-notification guards.
 - See `docs/plans/2026-06-13-arlo-empty-token-audio-session.md` for the launch
   audio-session privacy boundary.
+- See `docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md` for the
+  empty-token Wit singleton initialization boundary.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

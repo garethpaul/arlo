@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Guarded empty-token launch and teardown paths before Wit singleton access while
+  preserving configured token, speech-stop, capture-stop, and delegate behavior.
 - Prevented the default empty-token build from configuring or activating a
   play-and-record audio session during launch.
 - Preserved audio-session setup and caught failures for locally configured Wit

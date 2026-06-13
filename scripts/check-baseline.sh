@@ -24,6 +24,7 @@ WIT_DELEGATE_OWNERSHIP_PLAN="$ROOT_DIR/docs/plans/2026-06-10-arlo-wit-delegate-o
 AUDIO_MAIN_THREAD_PLAN="$ROOT_DIR/docs/plans/2026-06-12-arlo-audio-main-thread-state.md"
 CHECKOUT_CREDENTIAL_PLAN="$ROOT_DIR/docs/plans/2026-06-12-checkout-credential-boundary.md"
 EMPTY_TOKEN_AUDIO_SESSION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-audio-session.md"
+EMPTY_TOKEN_WIT_ISOLATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -212,11 +213,6 @@ if grep -Fq 'accessToken = ""' "$APP_DELEGATE"; then
   exit 1
 fi
 
-if ! grep -Fq "if AppDelegate.isWitConfigured" "$APP_DELEGATE"; then
-  printf '%s\n' "Wit token assignment must be guarded by a non-empty check." >&2
-  exit 1
-fi
-
 if ! grep -Fq "static var isWitConfigured: Bool" "$APP_DELEGATE"; then
   printf '%s\n' "AppDelegate must expose a read-only Wit configuration state." >&2
   exit 1
@@ -227,18 +223,39 @@ if ! grep -Fq "return !witAccessToken.isEmpty" "$APP_DELEGATE"; then
   exit 1
 fi
 
-if ! grep -Fq "guard AppDelegate.isWitConfigured else" "$APP_DELEGATE"; then
+audio_session_body=$(sed -n '/private func configureAudioSession()/,/^    }/p' "$APP_DELEGATE")
+if ! printf '%s\n' "$audio_session_body" | grep -Fq "guard AppDelegate.isWitConfigured else"; then
   printf '%s\n' "Audio session setup must return while the committed Wit token is empty." >&2
   exit 1
 fi
 
-audio_guard_line=$(grep -nF "guard AppDelegate.isWitConfigured else" "$APP_DELEGATE" | cut -d: -f1)
-audio_category_line=$(grep -nF "setCategory(AVAudioSessionCategoryPlayAndRecord)" "$APP_DELEGATE" | cut -d: -f1)
-audio_active_line=$(grep -nF "setActive(true)" "$APP_DELEGATE" | cut -d: -f1)
+audio_guard_line=$(printf '%s\n' "$audio_session_body" | grep -nF "guard AppDelegate.isWitConfigured else" | cut -d: -f1)
+audio_category_line=$(printf '%s\n' "$audio_session_body" | grep -nF "setCategory(AVAudioSessionCategoryPlayAndRecord)" | cut -d: -f1)
+audio_active_line=$(printf '%s\n' "$audio_session_body" | grep -nF "setActive(true)" | cut -d: -f1)
 if [ -z "$audio_guard_line" ] || [ -z "$audio_category_line" ] || \
    [ -z "$audio_active_line" ] || [ "$audio_guard_line" -ge "$audio_category_line" ] || \
    [ "$audio_category_line" -ge "$audio_active_line" ]; then
   printf '%s\n' "Empty-token guard must precede audio category selection and activation." >&2
+  exit 1
+fi
+
+wit_configuration_body=$(sed -n '/private func configureWit()/,/^    }/p' "$APP_DELEGATE")
+for wit_configuration_contract in \
+  "guard AppDelegate.isWitConfigured else" \
+  "let wit = Wit.sharedInstance()" \
+  "wit.accessToken = AppDelegate.witAccessToken" \
+  "wit.detectSpeechStop = WITVadConfig.detectSpeechStop"; do
+  if ! printf '%s\n' "$wit_configuration_body" | grep -Fq "$wit_configuration_contract"; then
+    printf '%s\n' "Configured Wit setup must preserve the guarded singleton contract: $wit_configuration_contract" >&2
+    exit 1
+  fi
+done
+
+wit_configuration_guard_line=$(printf '%s\n' "$wit_configuration_body" | grep -nF "guard AppDelegate.isWitConfigured else" | cut -d: -f1)
+wit_configuration_singleton_line=$(printf '%s\n' "$wit_configuration_body" | grep -nF "let wit = Wit.sharedInstance()" | cut -d: -f1)
+if [ -z "$wit_configuration_guard_line" ] || [ -z "$wit_configuration_singleton_line" ] || \
+   [ "$wit_configuration_guard_line" -ge "$wit_configuration_singleton_line" ]; then
+  printf '%s\n' "Empty-token Wit configuration guard must precede singleton access." >&2
   exit 1
 fi
 
@@ -305,6 +322,25 @@ fi
 
 if ! grep -Fq "guard wit.delegate === self else" "$VIEW_CONTROLLER"; then
   printf '%s\n' "ViewController must verify Wit delegate ownership before singleton teardown." >&2
+  exit 1
+fi
+
+wit_release_body=$(sed -n '/private func releaseWitDelegateIfOwned(stopCapture: Bool)/,/^    }/p' "$VIEW_CONTROLLER")
+for wit_release_contract in \
+  "guard AppDelegate.isWitConfigured else" \
+  "let wit = Wit.sharedInstance()" \
+  "guard wit.delegate === self else"; do
+  if ! printf '%s\n' "$wit_release_body" | grep -Fq "$wit_release_contract"; then
+    printf '%s\n' "Wit delegate teardown must preserve the guarded ownership contract: $wit_release_contract" >&2
+    exit 1
+  fi
+done
+
+wit_release_guard_line=$(printf '%s\n' "$wit_release_body" | grep -nF "guard AppDelegate.isWitConfigured else" | cut -d: -f1)
+wit_release_singleton_line=$(printf '%s\n' "$wit_release_body" | grep -nF "let wit = Wit.sharedInstance()" | cut -d: -f1)
+if [ -z "$wit_release_guard_line" ] || [ -z "$wit_release_singleton_line" ] || \
+   [ "$wit_release_guard_line" -ge "$wit_release_singleton_line" ]; then
+  printf '%s\n' "Empty-token delegate teardown guard must precede singleton access." >&2
   exit 1
 fi
 
@@ -667,6 +703,28 @@ fi
 
 if ! grep -Fq "Wit delegate registration is skipped" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the empty-token Wit delegate guard." >&2
+  exit 1
+fi
+
+if ! grep -Fq "empty-token lifecycle does not initialize the Wit singleton" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "2026-06-13-arlo-empty-token-wit-isolation.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document empty-token Wit singleton isolation and its plan." >&2
+  exit 1
+fi
+
+if ! grep -Fq "empty-token launch and teardown paths before Wit singleton access" "$ROOT_DIR/CHANGES.md" || \
+   ! grep -Fq "Keep empty-token launch and teardown paths from initializing the Wit singleton" "$ROOT_DIR/VISION.md"; then
+  printf '%s\n' "Repository guidance must document empty-token Wit singleton isolation." >&2
+  exit 1
+fi
+
+if [ ! -f "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" ] || \
+   ! grep -Fq "status: completed" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "## Status: Completed" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "make check" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "isolated hostile mutations were rejected" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "no simulator, Swift compilation, microphone" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN"; then
+  printf '%s\n' "Empty-token Wit isolation plan must record completed status and limited verification." >&2
   exit 1
 fi
 

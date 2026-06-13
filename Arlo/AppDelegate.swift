@@ -40,10 +40,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func configureWit() {
-        if AppDelegate.isWitConfigured {
-            Wit.sharedInstance().accessToken = AppDelegate.witAccessToken
+        guard AppDelegate.isWitConfigured else {
+            return
         }
-        Wit.sharedInstance().detectSpeechStop = WITVadConfig.detectSpeechStop
+
+        let wit = Wit.sharedInstance()
+        wit.accessToken = AppDelegate.witAccessToken
+        wit.detectSpeechStop = WITVadConfig.detectSpeechStop
     }
 
 }
