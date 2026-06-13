@@ -24,6 +24,7 @@ Priority:
 - Keep Wit singleton teardown conditional on the calling controller still
   owning the delegate
 - Keep Wit delegate registration disabled while the committed token is empty
+- Keep empty-token launches from activating unavailable voice audio resources
 - Keep waveform rendering resilient to malformed voice-power values
 - Keep asynchronous audio and recording UI state confined to the main queue
 - Ignore late Wit audio levels after recording becomes inactive

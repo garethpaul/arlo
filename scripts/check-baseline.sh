@@ -23,6 +23,7 @@ CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 WIT_DELEGATE_OWNERSHIP_PLAN="$ROOT_DIR/docs/plans/2026-06-10-arlo-wit-delegate-ownership.md"
 AUDIO_MAIN_THREAD_PLAN="$ROOT_DIR/docs/plans/2026-06-12-arlo-audio-main-thread-state.md"
 CHECKOUT_CREDENTIAL_PLAN="$ROOT_DIR/docs/plans/2026-06-12-checkout-credential-boundary.md"
+EMPTY_TOKEN_AUDIO_SESSION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-audio-session.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -223,6 +224,37 @@ fi
 
 if ! grep -Fq "return !witAccessToken.isEmpty" "$APP_DELEGATE"; then
   printf '%s\n' "Wit configuration state must derive from the committed token placeholder." >&2
+  exit 1
+fi
+
+if ! grep -Fq "guard AppDelegate.isWitConfigured else" "$APP_DELEGATE"; then
+  printf '%s\n' "Audio session setup must return while the committed Wit token is empty." >&2
+  exit 1
+fi
+
+audio_guard_line=$(grep -nF "guard AppDelegate.isWitConfigured else" "$APP_DELEGATE" | cut -d: -f1)
+audio_category_line=$(grep -nF "setCategory(AVAudioSessionCategoryPlayAndRecord)" "$APP_DELEGATE" | cut -d: -f1)
+audio_active_line=$(grep -nF "setActive(true)" "$APP_DELEGATE" | cut -d: -f1)
+if [ -z "$audio_guard_line" ] || [ -z "$audio_category_line" ] || \
+   [ -z "$audio_active_line" ] || [ "$audio_guard_line" -ge "$audio_category_line" ] || \
+   [ "$audio_category_line" -ge "$audio_active_line" ]; then
+  printf '%s\n' "Empty-token guard must precede audio category selection and activation." >&2
+  exit 1
+fi
+
+if ! grep -Fq "empty-token builds do not activate the play-and-record audio session" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "2026-06-13-arlo-empty-token-audio-session.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the empty-token audio-session boundary and plan." >&2
+  exit 1
+fi
+
+if [ ! -f "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" ] || \
+   ! grep -Fq "status: completed" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "## Status: Completed" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "make check" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "Seven isolated hostile mutations were rejected" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "no simulator, Swift compilation, microphone" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN"; then
+  printf '%s\n' "Empty-token audio-session plan must record completed status and limited verification." >&2
   exit 1
 fi
 

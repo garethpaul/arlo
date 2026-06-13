@@ -27,6 +27,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func configureAudioSession() {
+        guard AppDelegate.isWitConfigured else {
+            return
+        }
+
         do {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayAndRecord)
             try AVAudioSession.sharedInstance().setActive(true)

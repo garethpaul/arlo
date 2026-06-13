@@ -1,5 +1,12 @@
 # Arlo Changes
 
+## 2026-06-13
+
+- Prevented the default empty-token build from configuring or activating a
+  play-and-record audio session during launch.
+- Preserved audio-session setup and caught failures for locally configured Wit
+  builds.
+
 ## 2026-06-12
 
 - Disabled checkout credential persistence in the canonical SDK-free Check job

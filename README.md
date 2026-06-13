@@ -105,6 +105,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   drawing when UIKit does not provide a valid graphics context or bounds.
 - With the committed empty Wit token, the microphone control is dimmed and disabled
   so demo builds do not invite recording attempts before local credential setup.
+- The same empty-token builds do not activate the play-and-record audio session
+  at launch; configured local builds retain the guarded audio setup path.
 - The microphone control exposes the `arlo.voice.microphone` accessibility
   identifier for UI tests and assistive technology.
 - Wit delegate is registered only while the view is visible, and active voice
@@ -137,6 +139,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   delegate ownership guard.
 - See `docs/plans/2026-06-12-arlo-audio-main-thread-state.md` for main-thread
   waveform state and late-notification guards.
+- See `docs/plans/2026-06-13-arlo-empty-token-audio-session.md` for the launch
+  audio-session privacy boundary.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 
