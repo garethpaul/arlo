@@ -25,6 +25,7 @@ AUDIO_MAIN_THREAD_PLAN="$ROOT_DIR/docs/plans/2026-06-12-arlo-audio-main-thread-s
 CHECKOUT_CREDENTIAL_PLAN="$ROOT_DIR/docs/plans/2026-06-12-checkout-credential-boundary.md"
 EMPTY_TOKEN_AUDIO_SESSION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-audio-session.md"
 EMPTY_TOKEN_WIT_ISOLATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md"
+MAKE_ROOT_PROTECTION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-make-root-override-protection.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -92,6 +93,23 @@ if [ ! -f "$CHECKOUT_CREDENTIAL_PLAN" ] || \
    ! grep -Fq "external working directory" "$CHECKOUT_CREDENTIAL_PLAN" || \
    ! grep -Fq "hostile mutations rejected" "$CHECKOUT_CREDENTIAL_PLAN"; then
   printf '%s\n' "Checkout credential plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'override ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile" || \
+   ! grep -Fq '$(ROOT)scripts/check-baseline.sh' "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile verification must protect and resolve the checker from the loaded Makefile." >&2
+  exit 1
+fi
+
+if [ ! -f "$MAKE_ROOT_PROTECTION_PLAN" ] || \
+   ! grep -Fq "status: completed" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "## Status: Completed" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq 'make ROOT=/tmp check' "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "four Make gates" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "external working directory" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "Four isolated hostile mutations were rejected" "$MAKE_ROOT_PROTECTION_PLAN"; then
+  printf '%s\n' "Make root protection plan must record completed hostile-override and external verification." >&2
   exit 1
 fi
 

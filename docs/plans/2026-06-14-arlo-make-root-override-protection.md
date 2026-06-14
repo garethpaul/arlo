@@ -1,13 +1,13 @@
 ---
 title: Arlo Make Root Override Protection
 type: reliability
-status: in_progress
+status: completed
 date: 2026-06-14
 ---
 
 # Arlo Make Root Override Protection
 
-## Status: In Progress
+## Status: Completed
 
 ## Problem Frame
 
@@ -41,4 +41,17 @@ verification targets away from the checked-out repository.
 
 ## Verification
 
-Pending implementation and validation.
+- `sh -n scripts/check-baseline.sh` and `dash -n scripts/check-baseline.sh`
+  passed.
+- All four Make gates passed through `make lint`, `make test`, `make build`,
+  and `make check`; the legacy Xcode build and simulator steps were truthfully
+  skipped because `xcodebuild` is unavailable on this Linux host.
+- `make ROOT=/tmp check` passed and still executed the repository checker.
+- The full gate passed from `/tmp` through the absolute Makefile path, covering
+  the external working directory.
+- Four isolated hostile mutations were rejected: overrideable root, missing
+  plan, reopened plan, and missing verification evidence.
+- `git diff --check`, intended-path review, artifact inspection, and the
+  changed-line secret scan passed.
+- No simulator, Swift compilation, microphone, Wit request, or physical-device
+  behavior is claimed.
