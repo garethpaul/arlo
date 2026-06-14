@@ -37,6 +37,9 @@ Priority:
 - Keep GitHub Actions aligned with the SDK-free `make check` baseline
 - Keep non-persisted checkout credentials in hosted verification
 - Keep UI behavior simple enough to inspect from `ViewController.swift`
+- Keep exact-commit Arlo device verification matrix evidence separate from
+  portable checks, with unexecuted Xcode, microphone, Wit, and device rows
+  explicit
 
 Next priorities:
 
@@ -45,6 +48,8 @@ Next priorities:
 - Modernize Swift, iOS deployment target, Wit, and waveform dependencies in a
   dedicated pass
 - Add tests or manual verification notes for voice capture and speech output
+- Execute the device verification matrix with synthetic phrases and
+  privacy-safe permission, recording, lifecycle, and interruption evidence
 
 Contribution rules:
 

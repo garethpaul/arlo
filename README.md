@@ -67,6 +67,11 @@ Open `Arlo.xcworkspace` in Xcode for simulator or device verification. The legac
 
 This host does not have `xcodebuild`, `pod`, or `swift`, so full build, test, and CocoaPods verification must happen on a macOS machine with the matching legacy toolchain. The root `make test` and `make build` targets preserve the source preflight and report that Xcode workspace verification requires a checked-out macOS environment because no shared build or UI-test scheme is checked in.
 
+Use [`DEVICE_VERIFICATION.md`](DEVICE_VERIFICATION.md) for the exact-commit
+Arlo voice matrix. It covers empty/configured token modes, microphone
+permission, recording and waveform state, delegate ownership, interruptions,
+backgrounding, relaunch, privacy-safe evidence, and explicit unexecuted rows.
+
 GitHub Actions runs the SDK-free `make check` baseline on Ubuntu for pushes,
 pull requests, and manual dispatches. The workflow uses a commit-pinned
 checkout action, read-only repository access, and a bounded runtime. Full
@@ -146,6 +151,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   audio-session privacy boundary.
 - See `docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md` for the
   empty-token Wit singleton initialization boundary.
+- See `docs/plans/2026-06-14-arlo-device-verification-checklist.md` for the
+  simulator/device evidence matrix and runtime non-claims.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

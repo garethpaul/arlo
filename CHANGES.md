@@ -1,5 +1,11 @@
 # Arlo Changes
 
+## 2026-06-14
+
+- Added an exact-commit Arlo device verification matrix for empty/configured
+  token modes, microphone permission, recording and waveform state, delegate
+  ownership, interruption, backgrounding, relaunch, and privacy-safe evidence, with every runtime row explicitly unexecuted.
+
 ## 2026-06-13
 
 - Guarded empty-token launch and teardown paths before Wit singleton access while

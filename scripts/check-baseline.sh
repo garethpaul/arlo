@@ -26,6 +26,7 @@ CHECKOUT_CREDENTIAL_PLAN="$ROOT_DIR/docs/plans/2026-06-12-checkout-credential-bo
 EMPTY_TOKEN_AUDIO_SESSION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-audio-session.md"
 EMPTY_TOKEN_WIT_ISOLATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md"
 MAKE_ROOT_PROTECTION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-make-root-override-protection.md"
+DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-device-verification-checklist.md"
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -112,6 +113,56 @@ if [ ! -f "$MAKE_ROOT_PROTECTION_PLAN" ] || \
   printf '%s\n' "Make root protection plan must record completed hostile-override and external verification." >&2
   exit 1
 fi
+
+for required_device_path in "$ROOT_DIR/DEVICE_VERIFICATION.md" "$DEVICE_VERIFICATION_PLAN"; do
+  if [ ! -f "$required_device_path" ]; then
+    printf '%s\n' "Required Arlo device verification file is missing: ${required_device_path#"$ROOT_DIR/"}" >&2
+    exit 1
+  fi
+done
+
+for device_contract in \
+  'commit SHA and pull request' \
+  'synthetic phrase' \
+  'Empty-token launch' \
+  'Empty-token teardown' \
+  'Configured-token launch' \
+  'Microphone permission denied' \
+  'Microphone permission granted' \
+  'Recording start and stop' \
+  'Waveform finite values' \
+  'Missing waveform outlet' \
+  'Late audio power' \
+  'New controller ownership' \
+  'Audio interruption' \
+  'Background and foreground' \
+  'Do not convert `not run` into passing evidence.' \
+  'access tokens, recorded audio, transcripts' \
+  'every Xcode, simulator, microphone, Wit, and device row as unexecuted'; do
+  if ! grep -Fq "$device_contract" "$ROOT_DIR/DEVICE_VERIFICATION.md"; then
+    printf '%s\n' "Arlo device checklist must keep contract: $device_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'DEVICE_VERIFICATION.md' "$ROOT_DIR/README.md" || \
+   ! grep -Fq 'explicit unexecuted rows' "$ROOT_DIR/README.md" || \
+   ! grep -Fq 'Arlo device verification matrix' "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq 'every runtime row explicitly unexecuted' "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' 'Repository guidance must document the unexecuted Arlo device matrix.' >&2
+  exit 1
+fi
+
+for device_plan_contract in \
+  'Status: Completed' \
+  'make check' \
+  'hostile mutations' \
+  'No Xcode build, iOS simulator, physical device, microphone, locally configured Wit service, or live voice scenario was executed'; do
+  if ! grep -Fq "$device_plan_contract" "$DEVICE_VERIFICATION_PLAN"; then
+    printf '%s\n' "Arlo device plan must keep completion evidence: $device_plan_contract" >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq "does not persist checkout credentials" "$ROOT_DIR/README.md" || \
    ! grep -Fq "non-persisted checkout token" "$ROOT_DIR/SECURITY.md" || \
