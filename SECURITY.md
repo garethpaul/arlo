@@ -36,6 +36,8 @@ Helpful reports include:
 - Keep asynchronous Wit audio and recording state confined to the main queue,
   ignore late power notifications after capture stops, and reject stale start
   callbacks after the voice view becomes inactive.
+- Keep configured Wit bearer tokens and request URLs out of application and
+  device logs, including diagnostics in checked-in vendored dependencies.
 - The hosted workflow uses a commit-pinned checkout action, read-only repository
   access, and a bounded runtime.
 

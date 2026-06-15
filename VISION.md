@@ -67,6 +67,8 @@ Canonical security policy and reporting:
 
 Voice input and intent recognition are sensitive. Do not commit access tokens,
 recorded audio, transcripts, or service credentials.
+Do not log configured voice-service tokens or credential-bearing request URLs,
+including from checked-in vendored SDK code.
 Do not declare unused privacy permissions, and keep microphone permission copy
 specific about user-triggered Wit voice capture.
 

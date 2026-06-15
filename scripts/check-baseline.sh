@@ -27,6 +27,41 @@ EMPTY_TOKEN_AUDIO_SESSION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token
 EMPTY_TOKEN_WIT_ISOLATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md"
 MAKE_ROOT_PROTECTION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-make-root-override-protection.md"
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-device-verification-checklist.md"
+WIT_VAD_TRACKER="$ROOT_DIR/Pods/Wit/Wit/WITVadTracker.m"
+WIT_TOKEN_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-token-log-redaction.md"
+
+if [ ! -f "$WIT_VAD_TRACKER" ]; then
+  printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
+  exit 1
+fi
+
+if grep -Eq 'NSLog\([^;]*(token|url)' "$WIT_VAD_TRACKER" || \
+   grep -Fq 'here is the final url' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit VAD tracker must not log bearer tokens or request URLs." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'setValue:[NSString stringWithFormat:@"Bearer %@", token]' "$WIT_VAD_TRACKER" || \
+   ! grep -Fq 'initWithRequest:request delegate:self' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit token log redaction must preserve authenticated VAD request setup." >&2
+  exit 1
+fi
+
+if [ ! -f "$WIT_TOKEN_LOG_PLAN" ] || \
+   ! grep -Fq "Status: Completed" "$WIT_TOKEN_LOG_PLAN" || \
+   ! grep -Fq 'repository and external-directory `make check` passed' "$WIT_TOKEN_LOG_PLAN" || \
+   ! grep -Fq "hostile Wit token-log mutations were rejected" "$WIT_TOKEN_LOG_PLAN"; then
+  printf '%s\n' "Wit token log redaction plan must record completed verification evidence." >&2
+  exit 1
+fi
+
+if ! grep -Fq "never writes the token or request URL to device logs" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "Keep configured Wit bearer tokens and request URLs out of application" "$ROOT_DIR/SECURITY.md" || \
+   ! grep -Fq "Do not log configured voice-service tokens or credential-bearing request URLs" "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq "Removed the compiled vendored Wit VAD diagnostic" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Repository guidance must document Wit token log redaction." >&2
+  exit 1
+fi
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2

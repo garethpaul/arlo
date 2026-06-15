@@ -19,7 +19,6 @@
 
 -(void)track:(NSString *)status withMessageId:(NSString *)messageId withVadSensitivity:(int)vadSensitivity withToken:(NSString *)token {
     NSString *url = [[NSString alloc] initWithFormat:@"%@/speech/vad?message-id=%@&sensitivity=%d&sdk-ver=%@", kWitAPIUrl, messageId, vadSensitivity, kWitSDKVersion];
-    NSLog(@"here is the final url %@ and the token: %@", url, token);
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
     request.HTTPMethod = @"PUT";
     [request setValue:[NSString stringWithFormat:@"Bearer %@", token] forHTTPHeaderField:@"Authorization"];

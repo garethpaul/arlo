@@ -1,5 +1,8 @@
 # Arlo Changes
 
+- Removed the compiled vendored Wit VAD diagnostic that logged configured
+  bearer tokens and request URLs, and added a fail-closed source contract.
+
 ## 2026-06-14
 
 - Added an exact-commit Arlo device verification matrix for empty/configured

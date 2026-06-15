@@ -84,6 +84,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - The scan found credential-adjacent names. Review configuration paths before running against real accounts.
 - The voice button stays disabled until a non-empty local Wit access token is supplied outside the committed placeholder.
+- The compiled vendored Wit VAD tracker sends a configured token only in the
+  Authorization header and never writes the token or request URL to device logs.
 
 ## Security and Privacy Notes
 

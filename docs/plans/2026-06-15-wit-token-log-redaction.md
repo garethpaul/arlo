@@ -1,6 +1,6 @@
 # Wit Token Log Redaction
 
-## Status: Planned
+## Status: Completed
 
 ## Context
 
@@ -46,6 +46,16 @@ application or device diagnostics.
 - hostile token-log, URL-log, documentation, and completed-plan mutations
 - shell syntax, plist, workspace XML, generated-artifact, credential-pattern,
   and exact-diff audits
+
+## Verification Results
+
+- Focused baseline source-contract validation passed.
+- The repository and external-directory `make check` passed; Linux truthfully
+  used the documented source-only path because `xcodebuild` is unavailable.
+- Four hostile Wit token-log mutations were rejected across token logging,
+  request-URL logging, maintained documentation, and completed-plan evidence.
+- Shell syntax, plist, workspace XML, generated-artifact,
+  credential-pattern, conflict-marker, and exact-diff audits passed.
 
 ## Remaining Risks
 
