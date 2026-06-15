@@ -55,6 +55,7 @@
 - Waveform updates tolerate a missing storyboard outlet through an optional update helper.
 - Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
+- Wit processing error diagnostics use a constant message and never provider response fields.
 - `Pods/` is vendored dependency code; do not hand-edit it unless intentionally updating dependencies.
 
 ## Agent workflow

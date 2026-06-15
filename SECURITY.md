@@ -40,6 +40,7 @@ Helpful reports include:
   device logs, including diagnostics in checked-in vendored dependencies.
 - Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
+- Wit processing error diagnostics use a constant message and never provider response fields.
 - Keep recognized speech and inferred Wit response entities out of application and device logs;
   debug diagnostics should retain metadata only.
 - The hosted workflow uses a commit-pinned checkout action, read-only repository

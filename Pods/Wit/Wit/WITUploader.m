@@ -102,7 +102,7 @@
                                }
 
                                if (object[@"error"]) {
-                                   debug(@"Wit error: %@", object[@"error"]);
+                                   debug(@"Wit processing error");
                                    NSDictionary *infos = @{NSLocalizedDescriptionKey: object[@"error"],
                                                            kWitKeyError: object[@"code"]};
                                    [self.delegate gotResponse:nil

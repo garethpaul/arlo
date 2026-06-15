@@ -34,6 +34,7 @@ WIT_UPLOADER="$ROOT_DIR/Pods/Wit/Wit/WITUploader.m"
 WIT_RESPONSE_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-response-log-redaction.md"
 WIT_REQUEST_URL_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-request-url-log-redaction.md"
 WIT_NETWORK_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-network-error-log-redaction.md"
+WIT_PROCESSING_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-processing-error-log-redaction.md"
 
 if [ ! -f "$WIT_VAD_TRACKER" ]; then
   printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
@@ -150,6 +151,39 @@ for wit_network_error_plan_contract in \
   "Native compilation and configured-Wit execution were not performed"; do
   if ! grep -Fqi "$wit_network_error_plan_contract" "$WIT_NETWORK_ERROR_LOG_PLAN"; then
     printf '%s\n' "Wit network error log plan must record completion evidence: $wit_network_error_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'debug(@"Wit processing error");' "$WIT_UPLOADER" || \
+   ! grep -Fq 'if (object[@"error"]) {' "$WIT_UPLOADER" || \
+   ! grep -Fq 'NSLocalizedDescriptionKey: object[@"error"],' "$WIT_UPLOADER" || \
+   ! grep -Fq 'kWitKeyError: object[@"code"]' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit processing error redaction must preserve constant diagnostics and NSError propagation." >&2
+  exit 1
+fi
+
+if [ "$(grep -Fc 'object[@"error"]' "$WIT_UPLOADER")" -ne 2 ]; then
+  printf '%s\n' "Wit processing error response fields must not cross into diagnostics." >&2
+  exit 1
+fi
+
+wit_processing_error_guidance='Wit processing error diagnostics use a constant message and never provider response fields.'
+for wit_processing_error_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$wit_processing_error_guidance" "$wit_processing_error_doc"; then
+    printf '%s\n' "$wit_processing_error_doc must document Wit processing error log redaction." >&2
+    exit 1
+  fi
+done
+
+for wit_processing_error_plan_contract in \
+  "Status: Completed" \
+  "repository and external-directory make check passed" \
+  "Six hostile mutations" \
+  "Native compilation and configured-Wit execution were not performed"; do
+  if ! grep -Fq "$wit_processing_error_plan_contract" "$WIT_PROCESSING_ERROR_LOG_PLAN"; then
+    printf '%s\n' "Wit processing error log plan must record completion evidence: $wit_processing_error_plan_contract" >&2
     exit 1
   fi
 done

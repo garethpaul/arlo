@@ -1,5 +1,6 @@
 # Arlo Changes
 
+- Wit processing error diagnostics use a constant message and never provider response fields.
 - Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
 - Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Removed full Wit response bodies from debug logs while retaining response
