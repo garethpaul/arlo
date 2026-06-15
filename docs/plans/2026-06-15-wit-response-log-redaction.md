@@ -1,6 +1,6 @@
 # Wit Response Log Redaction
 
-## Status: Planned
+## Status: Completed
 
 ## Context
 
@@ -47,6 +47,17 @@ device diagnostics.
   mutations
 - shell syntax, plist, workspace XML, generated-artifact, credential-pattern,
   conflict-marker, and exact-diff audits
+
+## Verification Results
+
+- Focused source-contract validation passed.
+- The repository and external-directory `make check` passed; Linux truthfully
+  used the documented source-only path because `xcodebuild` is unavailable.
+- Five hostile Wit response-log mutations were rejected across text payload
+  logging, audio payload logging, HTTP status removal, maintained guidance, and
+  completed-plan evidence.
+- Native compilation, microphone, network, simulator, and physical-device
+  testing were not performed.
 
 ## Remaining Risks
 

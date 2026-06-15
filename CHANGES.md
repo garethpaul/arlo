@@ -1,5 +1,7 @@
 # Arlo Changes
 
+- Removed full Wit response bodies from debug logs while retaining response
+  timing and HTTP status diagnostics.
 - Removed the compiled vendored Wit VAD diagnostic that logged configured
   bearer tokens and request URLs, and added a fail-closed source contract.
 

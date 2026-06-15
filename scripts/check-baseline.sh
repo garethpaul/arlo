@@ -29,6 +29,9 @@ MAKE_ROOT_PROTECTION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-make-root-overri
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-device-verification-checklist.md"
 WIT_VAD_TRACKER="$ROOT_DIR/Pods/Wit/Wit/WITVadTracker.m"
 WIT_TOKEN_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-token-log-redaction.md"
+WIT_TEXT_CLIENT="$ROOT_DIR/Pods/Wit/Wit/Wit.m"
+WIT_UPLOADER="$ROOT_DIR/Pods/Wit/Wit/WITUploader.m"
+WIT_RESPONSE_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-response-log-redaction.md"
 
 if [ ! -f "$WIT_VAD_TRACKER" ]; then
   printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
@@ -60,6 +63,42 @@ if ! grep -Fq "never writes the token or request URL to device logs" "$ROOT_DIR/
    ! grep -Fq "Do not log configured voice-service tokens or credential-bearing request URLs" "$ROOT_DIR/VISION.md" || \
    ! grep -Fq "Removed the compiled vendored Wit VAD diagnostic" "$ROOT_DIR/CHANGES.md"; then
   printf '%s\n' "Repository guidance must document Wit token log redaction." >&2
+  exit 1
+fi
+
+for wit_response_source in "$WIT_TEXT_CLIENT" "$WIT_UPLOADER"; do
+  if [ ! -f "$wit_response_source" ]; then
+    printf '%s\n' "Compiled Wit response source is missing: ${wit_response_source#"$ROOT_DIR/"}" >&2
+    exit 1
+  fi
+
+  if grep -Eq 'NSLog\(@"Wit response[^\"]*%@' "$wit_response_source" || \
+     grep -Fq '[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]' "$wit_response_source"; then
+    printf '%s\n' "Wit response diagnostics must not log response payloads: ${wit_response_source#"$ROOT_DIR/"}" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'NSLog(@"Wit response (%f s)", t);' "$WIT_TEXT_CLIENT" || \
+   ! grep -Fq 'NSLog(@"Wit response %ld (%f s)",' "$WIT_UPLOADER" || \
+   ! grep -Fq '(long)[httpResp statusCode],' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit response redaction must preserve timing and HTTP status diagnostics." >&2
+  exit 1
+fi
+
+if [ ! -f "$WIT_RESPONSE_LOG_PLAN" ] || \
+   ! grep -Fq "Status: Completed" "$WIT_RESPONSE_LOG_PLAN" || \
+   ! grep -Fq 'repository and external-directory `make check` passed' "$WIT_RESPONSE_LOG_PLAN" || \
+   ! grep -Fq "hostile Wit response-log mutations were rejected" "$WIT_RESPONSE_LOG_PLAN"; then
+  printf '%s\n' "Wit response log redaction plan must record completed verification evidence." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Wit response diagnostics retain timing and status metadata without logging response bodies" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "Keep recognized speech and inferred Wit response entities out of application and device logs" "$ROOT_DIR/SECURITY.md" || \
+   ! grep -Fq "Do not log voice-service response bodies" "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq "Removed full Wit response bodies from debug logs" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Repository guidance must document Wit response log redaction." >&2
   exit 1
 fi
 

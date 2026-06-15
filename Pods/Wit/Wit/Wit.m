@@ -74,8 +74,7 @@
                            completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
                                if (WIT_DEBUG) {
                                    NSTimeInterval t = [[NSDate date] timeIntervalSinceDate:start];
-                                   NSLog(@"Wit response (%f s) %@",
-                                         t, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                                   NSLog(@"Wit response (%f s)", t);
                                }
 
                                if (connectionError) {

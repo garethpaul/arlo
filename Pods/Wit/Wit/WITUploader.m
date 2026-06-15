@@ -79,10 +79,9 @@
                                if (WIT_DEBUG) {
                                    NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
                                    NSTimeInterval t = [[NSDate date] timeIntervalSinceDate:start];
-                                   NSLog(@"Wit response %ld (%f s) %@",
+                                   NSLog(@"Wit response %ld (%f s)",
                                          (long)[httpResp statusCode],
-                                         t,
-                                         [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                                         t);
                                }
 
                                if (connectionError) {
