@@ -1,5 +1,6 @@
 # Arlo Changes
 
+- Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Removed full Wit response bodies from debug logs while retaining response
   timing and HTTP status diagnostics.
 - Removed the compiled vendored Wit VAD diagnostic that logged configured

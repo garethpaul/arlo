@@ -32,6 +32,7 @@ WIT_TOKEN_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-token-log-redaction.md"
 WIT_TEXT_CLIENT="$ROOT_DIR/Pods/Wit/Wit/Wit.m"
 WIT_UPLOADER="$ROOT_DIR/Pods/Wit/Wit/WITUploader.m"
 WIT_RESPONSE_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-response-log-redaction.md"
+WIT_REQUEST_URL_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-request-url-log-redaction.md"
 
 if [ ! -f "$WIT_VAD_TRACKER" ]; then
   printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
@@ -85,6 +86,37 @@ if ! grep -Fq 'NSLog(@"Wit response (%f s)", t);' "$WIT_TEXT_CLIENT" || \
   printf '%s\n' "Wit response redaction must preserve timing and HTTP status diagnostics." >&2
   exit 1
 fi
+
+if ! grep -Fq 'debug(@"HTTP %@", req.HTTPMethod);' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit uploader must retain only the non-sensitive HTTP method diagnostic." >&2
+  exit 1
+fi
+
+if grep -Eq 'debug\([^;]*(urlString|contextEncoded|encoded)' "$WIT_UPLOADER" || \
+   grep -Eq 'debug\(@"HTTP[^"]*%@[^\"]*%@' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit uploader diagnostics must not log request URLs or serialized context." >&2
+  exit 1
+fi
+
+wit_request_url_guidance='Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.'
+for wit_request_url_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$wit_request_url_guidance" "$wit_request_url_doc"; then
+    printf '%s\n' "$wit_request_url_doc must document Wit request URL redaction." >&2
+    exit 1
+  fi
+done
+
+for wit_request_url_plan_contract in \
+  "status: completed" \
+  "repository-root and external-directory make check passed" \
+  "hostile mutations" \
+  "Native compilation and configured-Wit execution were not performed"; do
+  if ! grep -Fqi "$wit_request_url_plan_contract" "$WIT_REQUEST_URL_LOG_PLAN"; then
+    printf '%s\n' "Wit request URL log plan must record completion evidence: $wit_request_url_plan_contract" >&2
+    exit 1
+  fi
+done
 
 if [ ! -f "$WIT_RESPONSE_LOG_PLAN" ] || \
    ! grep -Fq "Status: Completed" "$WIT_RESPONSE_LOG_PLAN" || \

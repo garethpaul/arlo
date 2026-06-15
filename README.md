@@ -86,6 +86,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The voice button stays disabled until a non-empty local Wit access token is supplied outside the committed placeholder.
 - The compiled vendored Wit VAD tracker sends a configured token only in the
   Authorization header and never writes the token or request URL to device logs.
+- Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Wit response diagnostics retain timing and status metadata without logging response bodies.
 
 ## Security and Privacy Notes

@@ -38,6 +38,7 @@ Helpful reports include:
   callbacks after the voice view becomes inactive.
 - Keep configured Wit bearer tokens and request URLs out of application and
   device logs, including diagnostics in checked-in vendored dependencies.
+- Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Keep recognized speech and inferred Wit response entities out of application and device logs;
   debug diagnostics should retain metadata only.
 - The hosted workflow uses a commit-pinned checkout action, read-only repository

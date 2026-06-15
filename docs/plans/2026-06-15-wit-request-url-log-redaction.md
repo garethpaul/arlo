@@ -1,7 +1,7 @@
 ---
 title: Wit Request URL Log Redaction
 type: security
-status: planned
+status: completed
 date: 2026-06-15
 ---
 
@@ -65,6 +65,21 @@ metadata and never complete request URLs or serialized context.
   incomplete-plan mutations.
 - Parse plist and workspace XML and audit exact intended paths, generated
   artifacts, conflict markers, whitespace, and credential-shaped additions.
+
+## Completion Evidence
+
+- Replaced the vendored audio uploader's complete request URL diagnostic with
+  method-only metadata while leaving request construction and transport intact.
+- Extended the fail-closed checker across both Wit request paths and synchronized
+  repository privacy guidance.
+- Five hostile mutations were rejected for restored full URLs, serialized
+  context logging, removed method metadata, missing guidance, and incomplete
+  plan status.
+- Repository-root and external-directory make check passed the portable source,
+  plist, workspace, documentation, and completed-plan contracts.
+- Exact-path diff, generated-artifact, conflict-marker, whitespace, and
+  credential-shaped-addition audits passed.
+- Native compilation and configured-Wit execution were not performed.
 
 ## Scope Boundaries
 

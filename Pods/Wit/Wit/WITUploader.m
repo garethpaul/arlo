@@ -70,7 +70,7 @@
     [req setValue:@"wit/ios" forHTTPHeaderField:@"Content-type"];
     [req setValue:@"chunked" forHTTPHeaderField:@"Transfer-encoding"];
     [req setValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    debug(@"HTTP %@ %@", req.HTTPMethod, urlString);
+    debug(@"HTTP %@", req.HTTPMethod);
 
     // send HTTP request
     [NSURLConnection sendAsynchronousRequest:req
