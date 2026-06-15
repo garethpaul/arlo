@@ -41,7 +41,7 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    NSLog(@"WITVadTracker error: %@", error);
+    NSLog(@"WITVadTracker error %@ (%ld)", error.domain, (long)error.code);
 }
 
 -(void) dealloc {

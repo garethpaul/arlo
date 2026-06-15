@@ -33,6 +33,7 @@ WIT_TEXT_CLIENT="$ROOT_DIR/Pods/Wit/Wit/Wit.m"
 WIT_UPLOADER="$ROOT_DIR/Pods/Wit/Wit/WITUploader.m"
 WIT_RESPONSE_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-response-log-redaction.md"
 WIT_REQUEST_URL_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-request-url-log-redaction.md"
+WIT_NETWORK_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-network-error-log-redaction.md"
 
 if [ ! -f "$WIT_VAD_TRACKER" ]; then
   printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
@@ -114,6 +115,41 @@ for wit_request_url_plan_contract in \
   "Native compilation and configured-Wit execution were not performed"; do
   if ! grep -Fqi "$wit_request_url_plan_contract" "$WIT_REQUEST_URL_LOG_PLAN"; then
     printf '%s\n' "Wit request URL log plan must record completion evidence: $wit_request_url_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'debug(@"Wit connection error %@ (%ld)",' "$WIT_UPLOADER" || \
+   ! grep -Fq 'connectionError.domain,' "$WIT_UPLOADER" || \
+   ! grep -Fq '(long)connectionError.code);' "$WIT_UPLOADER" || \
+   ! grep -Fq 'NSLog(@"WITVadTracker error %@ (%ld)", error.domain, (long)error.code);' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit network error diagnostics must retain only error domain and numeric code." >&2
+  exit 1
+fi
+
+if grep -Eq 'localizedDescription|\.userInfo' "$WIT_UPLOADER" "$WIT_VAD_TRACKER" || \
+   grep -Eq 'connectionError[[:space:]]*\);' "$WIT_UPLOADER" || \
+   grep -Eq 'error[[:space:]]*\);' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit network error diagnostics must not serialize NSError descriptions or request metadata." >&2
+  exit 1
+fi
+
+wit_network_error_guidance='Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.'
+for wit_network_error_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$wit_network_error_guidance" "$wit_network_error_doc"; then
+    printf '%s\n' "$wit_network_error_doc must document Wit network error log redaction." >&2
+    exit 1
+  fi
+done
+
+for wit_network_error_plan_contract in \
+  "status: completed" \
+  "repository-root and external-directory make check passed" \
+  "hostile mutations" \
+  "Native compilation and configured-Wit execution were not performed"; do
+  if ! grep -Fqi "$wit_network_error_plan_contract" "$WIT_NETWORK_ERROR_LOG_PLAN"; then
+    printf '%s\n' "Wit network error log plan must record completion evidence: $wit_network_error_plan_contract" >&2
     exit 1
   fi
 done

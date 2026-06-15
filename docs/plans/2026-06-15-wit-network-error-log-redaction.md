@@ -1,7 +1,7 @@
 ---
 title: Wit Network Error Log Redaction
 type: security
-status: planned
+status: completed
 date: 2026-06-15
 ---
 
@@ -38,7 +38,16 @@ and response log redactions.
 
 ## Completion Evidence
 
-- Pending implementation and verification.
+- Replaced both vendored Wit network failure diagnostics with error domain and
+  numeric code metadata while preserving the original error callbacks.
+- Repository-root and external-directory make check passed the portable source,
+  plist, workspace, documentation, and completed-plan contracts.
+- Six hostile mutations were rejected for restored uploader descriptions,
+  restored or additional full-error logs, removed metadata, missing guidance,
+  and incomplete plan status.
+- Exact-path diff, generated-artifact, conflict-marker, whitespace, and
+  credential-shaped-addition audits passed.
+- Native compilation and configured-Wit execution were not performed.
 
 ## Scope Boundaries
 

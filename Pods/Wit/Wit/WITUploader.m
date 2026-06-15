@@ -85,7 +85,9 @@
                                }
 
                                if (connectionError) {
-                                   debug(@"Got connection error: %@", connectionError.localizedDescription);
+                                   debug(@"Wit connection error %@ (%ld)",
+                                         connectionError.domain,
+                                         (long)connectionError.code);
                                    [self.delegate gotResponse:nil error:connectionError];
                                    return;
                                }

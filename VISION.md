@@ -70,6 +70,7 @@ recorded audio, transcripts, or service credentials.
 Do not log configured voice-service tokens or credential-bearing request URLs,
 including from checked-in vendored SDK code.
 Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
+Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
 Do not log voice-service response bodies; retain only non-sensitive timing and
 status diagnostics.
 Do not declare unused privacy permissions, and keep microphone permission copy

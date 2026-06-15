@@ -54,6 +54,7 @@
 - The waveform treats non-finite Wit audio-power values as silence before updating the UI.
 - Waveform updates tolerate a missing storyboard outlet through an optional update helper.
 - Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
+- Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
 - `Pods/` is vendored dependency code; do not hand-edit it unless intentionally updating dependencies.
 
 ## Agent workflow
