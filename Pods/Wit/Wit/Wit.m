@@ -10,11 +10,13 @@
 #import "util.h"
 //#import "WITRecordingSession.h"
 #import "WITContextSetter.h"
+#import "WITHTTPPolicy.h"
 
 
 @interface Wit ()
 @property (strong) WITState *state;
 @property WITRecordingSession *recordingSession;
+@property NSUInteger textRequestGeneration;
 @end
 
 @implementation Wit {
@@ -43,16 +45,26 @@
 
 
 - (void)start: (id)customData {
+    if (self.recordingSession) {
+        [self stop];
+    }
     self.recordingSession = [[WITRecordingSession alloc] initWithWitContext:state.context
                                                                  vadEnabled:[Wit sharedInstance].detectSpeechStop withWitToken:[WITState sharedInstance].accessToken
                                                                withDelegate:self];
+    if (!self.recordingSession) {
+        [self errorWithDescription:@"Unable to start voice capture." customData:customData];
+        return;
+    }
     self.recordingSession.customData = customData;
     self.recordingSession.delegate = self;
+    if (![self.recordingSession start]) {
+        self.recordingSession = nil;
+        [self errorWithDescription:@"Unable to start voice capture." customData:customData];
+    }
 }
 
 - (void)stop{
     [self.recordingSession stop];
-    self.recordingSession = nil;
 }
 
 - (BOOL)isRecording {
@@ -60,11 +72,28 @@
 }
 
 - (void) interpretString: (NSString *) string customData:(id)customData {
+    if (!WITIsValidAccessToken(self.accessToken) || ![string isKindOfClass:[NSString class]] || string.length == 0 || string.length > 16384) {
+        [self errorWithDescription:@"Invalid Wit request." customData:customData];
+        return;
+    }
     [self.wcs contextFillup:self.state.context];
     NSDate *start = [NSDate date];
-    NSString *contextEncoded = [WITContextSetter jsonEncode:self.state.context];
-    NSString *urlString = [NSString stringWithFormat:@"https://api.wit.ai/message?q=%@&v=%@&context=%@", urlencodeString(string), kWitAPIVersion, contextEncoded];
-    NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: urlString]];
+    NSError *requestError = nil;
+    NSData *contextData = [NSJSONSerialization dataWithJSONObject:self.state.context options:0 error:&requestError];
+    if (!contextData || contextData.length > 16384) {
+        [self errorWithDescription:@"Invalid Wit context." customData:customData];
+        return;
+    }
+    NSString *contextJSON = [[NSString alloc] initWithData:contextData encoding:NSUTF8StringEncoding];
+    NSURL *url = WITURLByAppendingQueryItems([NSURL URLWithString:@"https://api.wit.ai/message"],
+                                             @{ @"q": string, @"v": kWitAPIVersion, @"context": contextJSON },
+                                             &requestError);
+    if (!url) {
+        [self errorWithDescription:@"Invalid Wit request URL." customData:customData];
+        return;
+    }
+    NSUInteger generation = ++self.textRequestGeneration;
+    NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:url];
     [req setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
     [req setTimeoutInterval:15.0];
     [req setValue:[NSString stringWithFormat:@"Bearer %@", self.accessToken] forHTTPHeaderField:@"Authorization"];
@@ -72,33 +101,31 @@
     [NSURLConnection sendAsynchronousRequest:req
                                        queue:[NSOperationQueue mainQueue]
                            completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+                               if (generation != self.textRequestGeneration) {
+                                   return;
+                               }
                                if (WIT_DEBUG) {
                                    NSTimeInterval t = [[NSDate date] timeIntervalSinceDate:start];
-                                   NSLog(@"Wit response (%f s) %@",
-                                         t, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                                   NSLog(@"Wit response (%f s)", t);
                                }
 
                                if (connectionError) {
-                                   [self gotResponse:nil customData:customData error:connectionError];
+                                   [self gotResponse:nil customData:customData error:WITSanitizedTransportError(connectionError)];
                                    return;
                                }
 
-                               NSError *serializationError;
-                               NSDictionary *object = [NSJSONSerialization JSONObjectWithData:data
-                                                                                      options:0
-                                                                                        error:&serializationError];
-                               if (serializationError) {
-                                   [self gotResponse:nil customData:customData error:serializationError];
+                               NSError *responseError = nil;
+                               NSDictionary *object = WITJSONObjectFromResponse(response, data, &responseError);
+                               if (!object) {
+                                   [self gotResponse:nil customData:customData error:responseError];
                                    return;
                                }
 
                                if (object[@"error"]) {
-                                   NSDictionary *infos = @{NSLocalizedDescriptionKey: object[@"error"],
-                                                           kWitKeyError: object[@"code"]};
                                    [self gotResponse:nil customData:customData
                                                error:[NSError errorWithDomain:@"WitProcessing"
                                                                          code:1
-                                                                     userInfo:infos]];
+                                                                     userInfo:@{NSLocalizedDescriptionKey: @"The Wit service could not process the request."}]];
                                    return;
                                }
 
@@ -140,19 +167,15 @@
 }
 
 - (void)processMessage:(NSDictionary *)resp customData:(id)customData {
-    id error = resp[kWitKeyError];
-    if (error) {
-        NSString* errorDesc = [NSString stringWithFormat:@"Code %@: %@", error[@"code"], error[@"message"]];
-        return [self errorWithDescription:errorDesc customData:customData];
+    NSError *responseError = nil;
+    NSString *messageId = nil;
+    NSArray *outcomes = WITOutcomesFromJSONObject(resp, &messageId, &responseError);
+    if (!outcomes) {
+        [self error:responseError customData:customData];
+        return;
     }
 
-    NSArray* outcomes = resp[kWitKeyOutcome];
-    if (!outcomes || [outcomes count] == 0) {
-        return [self errorWithDescription:@"No outcome" customData:customData];
-    }
-    NSString *messageId = resp[kWitKeyMsgId];
-
-    [self.delegate witDidGraspIntent:outcomes messageId:messageId customData:customData error:error];
+    [self.delegate witDidGraspIntent:outcomes messageId:messageId customData:customData error:nil];
 
 }
 
@@ -166,7 +189,7 @@
 }
 
 - (void)setAccessToken:(NSString *)accessToken {
-    state.accessToken = accessToken;
+    state.accessToken = WITIsValidAccessToken(accessToken) ? [accessToken copy] : nil;
 }
 
 #pragma mark - Lifecycle
@@ -207,25 +230,36 @@
 
 #pragma mark - WITRecordingSessionDelegate
 
--(void)recordingSessionActivityDetectorStarted {
+- (BOOL)guardCurrentRecordingSession:(WITRecordingSession *)session {
+    if (session != self.recordingSession) {
+        return NO;
+    }
+    return session != nil;
+}
+
+-(void)recordingSessionActivityDetectorStarted:(WITRecordingSession *)session {
+    if (![self guardCurrentRecordingSession:session]) return;
     if ([self.delegate respondsToSelector:@selector(witActivityDetectorStarted)]) {
         [self.delegate witActivityDetectorStarted];
     }
 }
 
--(void)recordingSessionDidStartRecording {
+-(void)recordingSessionDidStartRecording:(WITRecordingSession *)session {
+    if (![self guardCurrentRecordingSession:session]) return;
     if ([self.delegate respondsToSelector:@selector(witDidStartRecording)]) {
         [self.delegate witDidStartRecording];
     }
 }
 
--(void)recordingSessionDidStopRecording {
+-(void)recordingSessionDidStopRecording:(WITRecordingSession *)session {
+    if (![self guardCurrentRecordingSession:session]) return;
     if ([self.delegate respondsToSelector:@selector(witDidStopRecording)]) {
         [self.delegate witDidStopRecording];
     }
 }
 
--(void)recordingSessionRecorderGotChunk:(NSData *)chunk {
+-(void)recordingSession:(WITRecordingSession *)session recorderGotChunk:(NSData *)chunk {
+    if (![self guardCurrentRecordingSession:session]) return;
     if ([self.delegate respondsToSelector:@selector(witDidGetAudio:)]) {
         [self.delegate witDidGetAudio:chunk];
     }
@@ -235,8 +269,10 @@
 
 }
 
--(void)recordingSessionGotResponse:(NSDictionary *)resp customData:(id)customData error:(NSError *)err {
+-(void)recordingSession:(WITRecordingSession *)session gotResponse:(NSDictionary *)resp customData:(id)customData error:(NSError *)err {
+    if (![self guardCurrentRecordingSession:session]) return;
     [self gotResponse:resp customData:customData error:err];
+    self.recordingSession = nil;
 }
 
 @end

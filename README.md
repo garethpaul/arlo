@@ -67,17 +67,33 @@ Open `Arlo.xcworkspace` in Xcode for simulator or device verification. The legac
 
 This host does not have `xcodebuild`, `pod`, or `swift`, so full build, test, and CocoaPods verification must happen on a macOS machine with the matching legacy toolchain. The root `make test` and `make build` targets preserve the source preflight and report that Xcode workspace verification requires a checked-out macOS environment because no shared build or UI-test scheme is checked in.
 
-GitHub Actions runs the SDK-free `make check` baseline on Ubuntu for pushes,
-pull requests, and manual dispatches. The workflow uses a commit-pinned
-checkout action, read-only repository access, and a bounded runtime. Full
-workspace and simulator verification remain a macOS legacy toolchain task.
+Use [`DEVICE_VERIFICATION.md`](DEVICE_VERIFICATION.md) for the exact-commit
+Arlo voice matrix. It covers empty/configured token modes, microphone
+permission, recording and waveform state, delegate ownership, interruptions,
+backgrounding, relaunch, privacy-safe evidence, and explicit unexecuted rows.
+
+GitHub Actions runs the SDK-free `make check` baseline on Ubuntu and native
+Foundation policy tests plus maintained Objective-C source compilation on
+macOS for pushes, pull requests, and manual dispatches. The workflow uses a
+commit-pinned checkout action, read-only repository access, bounded runtimes,
+and does not persist checkout credentials. Full workspace and simulator
+verification remain a macOS legacy-toolchain task.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
 
 - The scan found credential-adjacent names. Review configuration paths before running against real accounts.
-- The voice button stays disabled until a non-empty local Wit access token is supplied outside the committed placeholder.
+- The voice button stays disabled until a bounded local Wit access token without whitespace or control characters is supplied outside the committed placeholder.
+- The compiled vendored Wit VAD tracker sends a configured token only in the
+  Authorization header and never writes the token or request URL to device logs.
+- Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
+- Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
+- Wit processing error diagnostics use a constant message and never provider response fields.
+- Wit response diagnostics retain timing and status metadata without logging response bodies.
+- Wit HTTP responses must be successful JSON objects within a one-megabyte limit; nested provider errors, request URLs, and payloads are not propagated through diagnostic errors.
+- Voice capture activates the play-and-record session only after an owned recording session starts and deactivates it on failure or stop.
+- The vendored Wit context setter no longer prompts for location, starts location monitoring, or attaches coordinates to voice requests.
 
 ## Security and Privacy Notes
 
@@ -104,6 +120,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   drawing when UIKit does not provide a valid graphics context or bounds.
 - With the committed empty Wit token, the microphone control is dimmed and disabled
   so demo builds do not invite recording attempts before local credential setup.
+- The same empty-token builds do not activate the play-and-record audio session
+  at launch; configured local builds retain the guarded audio setup path.
 - The microphone control exposes the `arlo.voice.microphone` accessibility
   identifier for UI tests and assistive technology.
 - Wit delegate is registered only while the view is visible, and active voice
@@ -113,9 +131,12 @@ When the required SDK or runtime is unavailable, use static checks and source re
   newer visible voice screen.
 - Wit delegate registration is skipped while the committed token placeholder is
   empty.
-- The microphone permission text describes user-triggered Wit voice capture, and
-  no location permission text is declared because this source tree has no
-  location flow.
+- The empty-token lifecycle does not initialize the Wit singleton during launch
+  configuration or delegate teardown; configured local builds retain token,
+  speech-stop, capture-stop, and ownership behavior.
+- The microphone permission text describes user-triggered Wit voice capture.
+  No location permission text is declared, and the maintained vendored Wit
+  context helper no longer requests, monitors, or transmits location.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the
   SDK-free baseline available before macOS-only workspace verification,
   including when invoked outside the repository root with `make -f`.
@@ -136,6 +157,12 @@ When the required SDK or runtime is unavailable, use static checks and source re
   delegate ownership guard.
 - See `docs/plans/2026-06-12-arlo-audio-main-thread-state.md` for main-thread
   waveform state and late-notification guards.
+- See `docs/plans/2026-06-13-arlo-empty-token-audio-session.md` for the launch
+  audio-session privacy boundary.
+- See `docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md` for the
+  empty-token Wit singleton initialization boundary.
+- See `docs/plans/2026-06-14-arlo-device-verification-checklist.md` for the
+  simulator/device evidence matrix and runtime non-claims.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

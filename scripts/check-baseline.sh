@@ -22,6 +22,187 @@ CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 WIT_DELEGATE_OWNERSHIP_PLAN="$ROOT_DIR/docs/plans/2026-06-10-arlo-wit-delegate-ownership.md"
 AUDIO_MAIN_THREAD_PLAN="$ROOT_DIR/docs/plans/2026-06-12-arlo-audio-main-thread-state.md"
+CHECKOUT_CREDENTIAL_PLAN="$ROOT_DIR/docs/plans/2026-06-12-checkout-credential-boundary.md"
+EMPTY_TOKEN_AUDIO_SESSION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-audio-session.md"
+EMPTY_TOKEN_WIT_ISOLATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-arlo-empty-token-wit-isolation.md"
+MAKE_ROOT_PROTECTION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-make-root-override-protection.md"
+DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-arlo-device-verification-checklist.md"
+WIT_VAD_TRACKER="$ROOT_DIR/Pods/Wit/Wit/WITVadTracker.m"
+WIT_TOKEN_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-token-log-redaction.md"
+WIT_TEXT_CLIENT="$ROOT_DIR/Pods/Wit/Wit/Wit.m"
+WIT_UPLOADER="$ROOT_DIR/Pods/Wit/Wit/WITUploader.m"
+WIT_RESPONSE_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-response-log-redaction.md"
+WIT_REQUEST_URL_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-request-url-log-redaction.md"
+WIT_NETWORK_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-network-error-log-redaction.md"
+WIT_PROCESSING_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-processing-error-log-redaction.md"
+
+if [ ! -f "$WIT_VAD_TRACKER" ]; then
+  printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
+  exit 1
+fi
+
+if grep -Eq 'NSLog\([^;]*(token|url)' "$WIT_VAD_TRACKER" || \
+   grep -Fq 'here is the final url' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit VAD tracker must not log bearer tokens or request URLs." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'setValue:[NSString stringWithFormat:@"Bearer %@", token]' "$WIT_VAD_TRACKER" || \
+   ! grep -Fq 'initWithRequest:request delegate:self' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit token log redaction must preserve authenticated VAD request setup." >&2
+  exit 1
+fi
+
+if [ ! -f "$WIT_TOKEN_LOG_PLAN" ] || \
+   ! grep -Fq "Status: Completed" "$WIT_TOKEN_LOG_PLAN" || \
+   ! grep -Fq 'repository and external-directory `make check` passed' "$WIT_TOKEN_LOG_PLAN" || \
+   ! grep -Fq "hostile Wit token-log mutations were rejected" "$WIT_TOKEN_LOG_PLAN"; then
+  printf '%s\n' "Wit token log redaction plan must record completed verification evidence." >&2
+  exit 1
+fi
+
+if ! grep -Fq "never writes the token or request URL to device logs" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "Keep configured Wit bearer tokens and request URLs out of application" "$ROOT_DIR/SECURITY.md" || \
+   ! grep -Fq "Do not log configured voice-service tokens or credential-bearing request URLs" "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq "Removed the compiled vendored Wit VAD diagnostic" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Repository guidance must document Wit token log redaction." >&2
+  exit 1
+fi
+
+for wit_response_source in "$WIT_TEXT_CLIENT" "$WIT_UPLOADER"; do
+  if [ ! -f "$wit_response_source" ]; then
+    printf '%s\n' "Compiled Wit response source is missing: ${wit_response_source#"$ROOT_DIR/"}" >&2
+    exit 1
+  fi
+
+  if grep -Eq 'NSLog\(@"Wit response[^\"]*%@' "$wit_response_source" || \
+     grep -Fq '[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]' "$wit_response_source"; then
+    printf '%s\n' "Wit response diagnostics must not log response payloads: ${wit_response_source#"$ROOT_DIR/"}" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'NSLog(@"Wit response (%f s)", t);' "$WIT_TEXT_CLIENT" || \
+   ! grep -Fq 'NSLog(@"Wit response %ld (%f s)",' "$WIT_UPLOADER" || \
+   ! grep -Fq '(long)[httpResp statusCode],' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit response redaction must preserve timing and HTTP status diagnostics." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'debug(@"HTTP %@", req.HTTPMethod);' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit uploader must retain only the non-sensitive HTTP method diagnostic." >&2
+  exit 1
+fi
+
+if grep -Eq 'debug\([^;]*(urlString|contextEncoded|encoded)' "$WIT_UPLOADER" || \
+   grep -Eq 'debug\(@"HTTP[^"]*%@[^\"]*%@' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit uploader diagnostics must not log request URLs or serialized context." >&2
+  exit 1
+fi
+
+wit_request_url_guidance='Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.'
+for wit_request_url_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$wit_request_url_guidance" "$wit_request_url_doc"; then
+    printf '%s\n' "$wit_request_url_doc must document Wit request URL redaction." >&2
+    exit 1
+  fi
+done
+
+for wit_request_url_plan_contract in \
+  "status: completed" \
+  "repository-root and external-directory make check passed" \
+  "hostile mutations" \
+  "Native compilation and configured-Wit execution were not performed"; do
+  if ! grep -Fqi "$wit_request_url_plan_contract" "$WIT_REQUEST_URL_LOG_PLAN"; then
+    printf '%s\n' "Wit request URL log plan must record completion evidence: $wit_request_url_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'debug(@"Wit connection error %@ (%ld)",' "$WIT_UPLOADER" || \
+   ! grep -Fq 'connectionError.domain,' "$WIT_UPLOADER" || \
+   ! grep -Fq '(long)connectionError.code);' "$WIT_UPLOADER" || \
+   ! grep -Fq 'NSLog(@"WITVadTracker error %@ (%ld)", error.domain, (long)error.code);' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit network error diagnostics must retain only error domain and numeric code." >&2
+  exit 1
+fi
+
+if grep -Eq 'localizedDescription|\.userInfo' "$WIT_UPLOADER" "$WIT_VAD_TRACKER" || \
+   grep -Eq 'connectionError[[:space:]]*\);' "$WIT_UPLOADER" || \
+   grep -Eq 'error[[:space:]]*\);' "$WIT_VAD_TRACKER"; then
+  printf '%s\n' "Wit network error diagnostics must not serialize NSError descriptions or request metadata." >&2
+  exit 1
+fi
+
+wit_network_error_guidance='Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.'
+for wit_network_error_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$wit_network_error_guidance" "$wit_network_error_doc"; then
+    printf '%s\n' "$wit_network_error_doc must document Wit network error log redaction." >&2
+    exit 1
+  fi
+done
+
+for wit_network_error_plan_contract in \
+  "status: completed" \
+  "repository-root and external-directory make check passed" \
+  "hostile mutations" \
+  "Native compilation and configured-Wit execution were not performed"; do
+  if ! grep -Fqi "$wit_network_error_plan_contract" "$WIT_NETWORK_ERROR_LOG_PLAN"; then
+    printf '%s\n' "Wit network error log plan must record completion evidence: $wit_network_error_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'debug(@"Wit processing error");' "$WIT_UPLOADER" || \
+   ! grep -Fq 'if (object[@"error"]) {' "$WIT_UPLOADER" || \
+   ! grep -Fq 'NSLocalizedDescriptionKey: @"The Wit service could not process the request."' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit processing errors must propagate only a constant description." >&2
+  exit 1
+fi
+
+if grep -Fq 'NSLocalizedDescriptionKey: object[@"error"]' "$WIT_UPLOADER" || \
+   grep -Fq 'kWitKeyError: object[@"code"]' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit processing error fields must not cross into propagated NSError metadata." >&2
+  exit 1
+fi
+
+wit_processing_error_guidance='Wit processing error diagnostics use a constant message and never provider response fields.'
+for wit_processing_error_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$wit_processing_error_guidance" "$wit_processing_error_doc"; then
+    printf '%s\n' "$wit_processing_error_doc must document Wit processing error log redaction." >&2
+    exit 1
+  fi
+done
+
+for wit_processing_error_plan_contract in \
+  "Status: Completed" \
+  "repository and external-directory make check passed" \
+  "Six hostile mutations" \
+  "Native compilation and configured-Wit execution were not performed"; do
+  if ! grep -Fq "$wit_processing_error_plan_contract" "$WIT_PROCESSING_ERROR_LOG_PLAN"; then
+    printf '%s\n' "Wit processing error log plan must record completion evidence: $wit_processing_error_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if [ ! -f "$WIT_RESPONSE_LOG_PLAN" ] || \
+   ! grep -Fq "Status: Completed" "$WIT_RESPONSE_LOG_PLAN" || \
+   ! grep -Fq 'repository and external-directory `make check` passed' "$WIT_RESPONSE_LOG_PLAN" || \
+   ! grep -Fq "hostile Wit response-log mutations were rejected" "$WIT_RESPONSE_LOG_PLAN"; then
+  printf '%s\n' "Wit response log redaction plan must record completed verification evidence." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Wit response diagnostics retain timing and status metadata without logging response bodies" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "Keep recognized speech and inferred Wit response entities out of application and device logs" "$ROOT_DIR/SECURITY.md" || \
+   ! grep -Fq "Do not log voice-service response bodies" "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq "Removed full Wit response bodies from debug logs" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Repository guidance must document Wit response log redaction." >&2
+  exit 1
+fi
 
 if [ ! -f "$ROOT_DIR/CHANGES.md" ]; then
   printf '%s\n' "CHANGES.md must document repository maintenance." >&2
@@ -48,6 +229,19 @@ if ! grep -Fq "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" "$CI_W
   exit 1
 fi
 
+checkout_count=$(grep -Fc 'uses: actions/checkout@' "$CI_WORKFLOW")
+if [ "$checkout_count" -eq 0 ] || \
+   [ "$(grep -Fc 'persist-credentials: false' "$CI_WORKFLOW")" -ne "$checkout_count" ]; then
+  printf '%s\n' "Every checkout step must disable credential persistence." >&2
+  exit 1
+fi
+
+if grep -E '^[[:space:]]*(-[[:space:]]+)?uses:' "$CI_WORKFLOW" | \
+   grep -Ev '@[0-9a-f]{40}([[:space:]]+#.*)?$' >/dev/null; then
+  printf '%s\n' "GitHub Actions must use immutable commit SHAs." >&2
+  exit 1
+fi
+
 if ! grep -Fq "permissions:" "$CI_WORKFLOW" || ! grep -Fq "contents: read" "$CI_WORKFLOW"; then
   printf '%s\n' "GitHub Actions must keep repository access read-only." >&2
   exit 1
@@ -60,6 +254,105 @@ fi
 
 if ! grep -Fq "cancel-in-progress: true" "$CI_WORKFLOW"; then
   printf '%s\n' "GitHub Actions must cancel superseded baseline runs." >&2
+  exit 1
+fi
+
+if [ "$(grep -Ec '^[[:space:]]*permissions:' "$CI_WORKFLOW")" -ne 1 ] || \
+   [ "$(grep -Ec '^[[:space:]]+contents:[[:space:]]*read[[:space:]]*$' "$CI_WORKFLOW")" -ne 1 ] || \
+   grep -Eq 'write-all|:[[:space:]]*write|continue-on-error:[[:space:]]*true|if:[[:space:]]*false' "$CI_WORKFLOW" || \
+   [ "$(grep -Ec '^[[:space:]]*(-[[:space:]]+)?run:' "$CI_WORKFLOW")" -ne 3 ]; then
+  printf '%s\n' "Check workflow must keep exact read-only permissions and the three reviewed commands." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'runs-on: macos-15' "$CI_WORKFLOW" || \
+   ! grep -Fq 'run: scripts/test-wit-http-policy.sh' "$CI_WORKFLOW" || \
+   ! grep -Fq 'Pods/Wit/Wit/WITHTTPPolicy.m' "$CI_WORKFLOW"; then
+  printf '%s\n' "Check workflow must run native policy tests and compile maintained Wit sources." >&2
+  exit 1
+fi
+
+if [ ! -f "$CHECKOUT_CREDENTIAL_PLAN" ] || \
+   ! grep -Fq "status: completed" "$CHECKOUT_CREDENTIAL_PLAN" || \
+   ! grep -Fq "make check" "$CHECKOUT_CREDENTIAL_PLAN" || \
+   ! grep -Fq "external working directory" "$CHECKOUT_CREDENTIAL_PLAN" || \
+   ! grep -Fq "hostile mutations rejected" "$CHECKOUT_CREDENTIAL_PLAN"; then
+  printf '%s\n' "Checkout credential plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'override ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile" || \
+   ! grep -Fq '$(ROOT)scripts/check-baseline.sh' "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile verification must protect and resolve the checker from the loaded Makefile." >&2
+  exit 1
+fi
+
+if [ ! -f "$MAKE_ROOT_PROTECTION_PLAN" ] || \
+   ! grep -Fq "status: completed" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "## Status: Completed" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq 'make ROOT=/tmp check' "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "four Make gates" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "external working directory" "$MAKE_ROOT_PROTECTION_PLAN" || \
+   ! grep -Fq "Four isolated hostile mutations were rejected" "$MAKE_ROOT_PROTECTION_PLAN"; then
+  printf '%s\n' "Make root protection plan must record completed hostile-override and external verification." >&2
+  exit 1
+fi
+
+for required_device_path in "$ROOT_DIR/DEVICE_VERIFICATION.md" "$DEVICE_VERIFICATION_PLAN"; do
+  if [ ! -f "$required_device_path" ]; then
+    printf '%s\n' "Required Arlo device verification file is missing: ${required_device_path#"$ROOT_DIR/"}" >&2
+    exit 1
+  fi
+done
+
+for device_contract in \
+  'commit SHA and pull request' \
+  'synthetic phrase' \
+  'Empty-token launch' \
+  'Empty-token teardown' \
+  'Configured-token launch' \
+  'Microphone permission denied' \
+  'Microphone permission granted' \
+  'Recording start and stop' \
+  'Waveform finite values' \
+  'Missing waveform outlet' \
+  'Late audio power' \
+  'New controller ownership' \
+  'Audio interruption' \
+  'Background and foreground' \
+  'Do not convert `not run` into passing evidence.' \
+  'access tokens, recorded audio, transcripts' \
+  'every Xcode, simulator, microphone, Wit, and device row as unexecuted'; do
+  if ! grep -Fq "$device_contract" "$ROOT_DIR/DEVICE_VERIFICATION.md"; then
+    printf '%s\n' "Arlo device checklist must keep contract: $device_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'DEVICE_VERIFICATION.md' "$ROOT_DIR/README.md" || \
+   ! grep -Fq 'explicit unexecuted rows' "$ROOT_DIR/README.md" || \
+   ! grep -Fq 'Arlo device verification matrix' "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq 'every runtime row explicitly unexecuted' "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' 'Repository guidance must document the unexecuted Arlo device matrix.' >&2
+  exit 1
+fi
+
+for device_plan_contract in \
+  'Status: Completed' \
+  'make check' \
+  'hostile mutations' \
+  'No Xcode build, iOS simulator, physical device, microphone, locally configured Wit service, or live voice scenario was executed'; do
+  if ! grep -Fq "$device_plan_contract" "$DEVICE_VERIFICATION_PLAN"; then
+    printf '%s\n' "Arlo device plan must keep completion evidence: $device_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq "does not persist checkout credentials" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "non-persisted checkout token" "$ROOT_DIR/SECURITY.md" || \
+   ! grep -Fq "non-persisted checkout credentials" "$ROOT_DIR/VISION.md" || \
+   ! grep -Fq "checkout credential persistence" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Repository guidance must document the checkout credential boundary." >&2
   exit 1
 fi
 
@@ -158,8 +451,8 @@ if grep -Fq "try!" "$APP_DELEGATE"; then
   exit 1
 fi
 
-if ! grep -Fq "import AVFoundation" "$APP_DELEGATE"; then
-  printf '%s\n' "AppDelegate must import AVFoundation explicitly for audio session setup." >&2
+if grep -Fq "setActive(true)" "$APP_DELEGATE" || grep -Fq "configureAudioSession()" "$APP_DELEGATE"; then
+  printf '%s\n' "Application launch must not reserve the microphone audio session." >&2
   exit 1
 fi
 
@@ -173,18 +466,58 @@ if grep -Fq 'accessToken = ""' "$APP_DELEGATE"; then
   exit 1
 fi
 
-if ! grep -Fq "if AppDelegate.isWitConfigured" "$APP_DELEGATE"; then
-  printf '%s\n' "Wit token assignment must be guarded by a non-empty check." >&2
-  exit 1
-fi
-
 if ! grep -Fq "static var isWitConfigured: Bool" "$APP_DELEGATE"; then
   printf '%s\n' "AppDelegate must expose a read-only Wit configuration state." >&2
   exit 1
 fi
 
-if ! grep -Fq "return !witAccessToken.isEmpty" "$APP_DELEGATE"; then
-  printf '%s\n' "Wit configuration state must derive from the committed token placeholder." >&2
+if ! grep -Fq "witAccessToken.characters.count <= 4096" "$APP_DELEGATE" || \
+   ! grep -Fq "CharacterSet.whitespacesAndNewlines" "$APP_DELEGATE" || \
+   ! grep -Fq "CharacterSet.controlCharacters" "$APP_DELEGATE"; then
+  printf '%s\n' "Wit configuration state must reject oversized, whitespace-bearing, and control-bearing tokens." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'WITIsValidAccessToken(witToken)' "$ROOT_DIR/Pods/Wit/Wit/WITRecordingSession.m" || \
+   ! grep -Fq 'setActive:YES' "$ROOT_DIR/Pods/Wit/Wit/WITRecordingSession.m" || \
+   ! grep -Fq 'setActive:NO' "$ROOT_DIR/Pods/Wit/Wit/WITRecordingSession.m"; then
+  printf '%s\n' "Wit recording must validate configuration and own symmetric audio activation." >&2
+  exit 1
+fi
+
+wit_configuration_body=$(sed -n '/private func configureWit()/,/^    }/p' "$APP_DELEGATE")
+for wit_configuration_contract in \
+  "guard AppDelegate.isWitConfigured else" \
+  "let wit = Wit.sharedInstance()" \
+  "wit.accessToken = AppDelegate.witAccessToken" \
+  "wit.detectSpeechStop = WITVadConfig.detectSpeechStop"; do
+  if ! printf '%s\n' "$wit_configuration_body" | grep -Fq "$wit_configuration_contract"; then
+    printf '%s\n' "Configured Wit setup must preserve the guarded singleton contract: $wit_configuration_contract" >&2
+    exit 1
+  fi
+done
+
+wit_configuration_guard_line=$(printf '%s\n' "$wit_configuration_body" | grep -nF "guard AppDelegate.isWitConfigured else" | cut -d: -f1)
+wit_configuration_singleton_line=$(printf '%s\n' "$wit_configuration_body" | grep -nF "let wit = Wit.sharedInstance()" | cut -d: -f1)
+if [ -z "$wit_configuration_guard_line" ] || [ -z "$wit_configuration_singleton_line" ] || \
+   [ "$wit_configuration_guard_line" -ge "$wit_configuration_singleton_line" ]; then
+  printf '%s\n' "Empty-token Wit configuration guard must precede singleton access." >&2
+  exit 1
+fi
+
+if ! grep -Fq "empty-token builds do not activate the play-and-record audio session" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "2026-06-13-arlo-empty-token-audio-session.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the empty-token audio-session boundary and plan." >&2
+  exit 1
+fi
+
+if [ ! -f "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" ] || \
+   ! grep -Fq "status: completed" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "## Status: Completed" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "make check" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "Seven isolated hostile mutations were rejected" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN" || \
+   ! grep -Fq "no simulator, Swift compilation, microphone" "$EMPTY_TOKEN_AUDIO_SESSION_PLAN"; then
+  printf '%s\n' "Empty-token audio-session plan must record completed status and limited verification." >&2
   exit 1
 fi
 
@@ -235,6 +568,25 @@ fi
 
 if ! grep -Fq "guard wit.delegate === self else" "$VIEW_CONTROLLER"; then
   printf '%s\n' "ViewController must verify Wit delegate ownership before singleton teardown." >&2
+  exit 1
+fi
+
+wit_release_body=$(sed -n '/private func releaseWitDelegateIfOwned(stopCapture: Bool)/,/^    }/p' "$VIEW_CONTROLLER")
+for wit_release_contract in \
+  "guard AppDelegate.isWitConfigured else" \
+  "let wit = Wit.sharedInstance()" \
+  "guard wit.delegate === self else"; do
+  if ! printf '%s\n' "$wit_release_body" | grep -Fq "$wit_release_contract"; then
+    printf '%s\n' "Wit delegate teardown must preserve the guarded ownership contract: $wit_release_contract" >&2
+    exit 1
+  fi
+done
+
+wit_release_guard_line=$(printf '%s\n' "$wit_release_body" | grep -nF "guard AppDelegate.isWitConfigured else" | cut -d: -f1)
+wit_release_singleton_line=$(printf '%s\n' "$wit_release_body" | grep -nF "let wit = Wit.sharedInstance()" | cut -d: -f1)
+if [ -z "$wit_release_guard_line" ] || [ -z "$wit_release_singleton_line" ] || \
+   [ "$wit_release_guard_line" -ge "$wit_release_singleton_line" ]; then
+  printf '%s\n' "Empty-token delegate teardown guard must precede singleton access." >&2
   exit 1
 fi
 
@@ -570,8 +922,8 @@ if ! grep -Fq "non-finite Wit audio-power values" "$ROOT_DIR/README.md"; then
   exit 1
 fi
 
-if ! grep -Fq "The voice button stays disabled until a non-empty local Wit access token is supplied" "$ROOT_DIR/README.md"; then
-  printf '%s\n' "README must document the empty-token voice button guard." >&2
+if ! grep -Fq "The voice button stays disabled until a bounded local Wit access token without whitespace or control characters is supplied" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the validated Wit token guard." >&2
   exit 1
 fi
 
@@ -597,6 +949,28 @@ fi
 
 if ! grep -Fq "Wit delegate registration is skipped" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the empty-token Wit delegate guard." >&2
+  exit 1
+fi
+
+if ! grep -Fq "empty-token lifecycle does not initialize the Wit singleton" "$ROOT_DIR/README.md" || \
+   ! grep -Fq "2026-06-13-arlo-empty-token-wit-isolation.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document empty-token Wit singleton isolation and its plan." >&2
+  exit 1
+fi
+
+if ! grep -Fq "empty-token launch and teardown paths before Wit singleton access" "$ROOT_DIR/CHANGES.md" || \
+   ! grep -Fq "Keep empty-token launch and teardown paths from initializing the Wit singleton" "$ROOT_DIR/VISION.md"; then
+  printf '%s\n' "Repository guidance must document empty-token Wit singleton isolation." >&2
+  exit 1
+fi
+
+if [ ! -f "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" ] || \
+   ! grep -Fq "status: completed" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "## Status: Completed" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "make check" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "isolated hostile mutations were rejected" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN" || \
+   ! grep -Fq "no simulator, Swift compilation, microphone" "$EMPTY_TOKEN_WIT_ISOLATION_PLAN"; then
+  printf '%s\n' "Empty-token Wit isolation plan must record completed status and limited verification." >&2
   exit 1
 fi
 

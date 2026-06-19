@@ -11,6 +11,7 @@
 #import "WITState.h"
 #import "util.h"
 #import "WITContextSetter.h"
+#import "WITHTTPPolicy.h"
 
 @interface WITUploader ()
 @property (atomic) BOOL requestEnding;
@@ -19,6 +20,7 @@
 // will be suspended / resumed according to stream availability
 @property (atomic) NSOperationQueue* q;
 @property (atomic) WITRecorder *recorder;
+@property (atomic) NSUInteger requestGeneration;
 @end
 
 @implementation WITUploader {
@@ -34,6 +36,10 @@
 -(BOOL)startRequestWithContext:(NSMutableDictionary *)context {
     requestEnding = NO;
     NSString* token = [[WITState sharedInstance] accessToken];
+    if (!WITIsValidAccessToken(token)) {
+        return NO;
+    }
+    NSUInteger generation = ++self.requestGeneration;
 
     // CF wiring
     CFWriteStreamRef writeStream;
@@ -50,18 +56,23 @@
     [outStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
     [outStream open];
 
-    NSString* urlString;
-
-    // build HTTP Request
-    // if context, add to URL
+    NSError *requestError = nil;
+    NSURL *requestURL = [NSURL URLWithString:kWitSpeechURL];
     if (context != nil) {
-        NSString *encoded = [WITContextSetter jsonEncode:context];
-        urlString = [NSString stringWithFormat:@"%@&context=%@", kWitSpeechURL, encoded];
-    } else {
-        urlString = kWitSpeechURL;
+        NSData *contextData = [NSJSONSerialization dataWithJSONObject:context options:0 error:&requestError];
+        if (!contextData || contextData.length > 16384) {
+            [self cleanUp];
+            return NO;
+        }
+        NSString *contextJSON = [[NSString alloc] initWithData:contextData encoding:NSUTF8StringEncoding];
+        requestURL = WITURLByAppendingQueryItems(requestURL, @{ @"context": contextJSON }, &requestError);
+        if (!requestURL) {
+            [self cleanUp];
+            return NO;
+        }
     }
 
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:urlString]];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:requestURL];
     [req setHTTPMethod:@"POST"];
     [req setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
     [req setTimeoutInterval:15.0];
@@ -70,44 +81,44 @@
     [req setValue:@"wit/ios" forHTTPHeaderField:@"Content-type"];
     [req setValue:@"chunked" forHTTPHeaderField:@"Transfer-encoding"];
     [req setValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    debug(@"HTTP %@ %@", req.HTTPMethod, urlString);
+    debug(@"HTTP %@", req.HTTPMethod);
 
     // send HTTP request
     [NSURLConnection sendAsynchronousRequest:req
                                        queue:[NSOperationQueue mainQueue]
                            completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+                               if (generation != self.requestGeneration) {
+                                   return;
+                               }
                                if (WIT_DEBUG) {
-                                   NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
+                                   NSHTTPURLResponse* httpResp = [response isKindOfClass:[NSHTTPURLResponse class]] ? (NSHTTPURLResponse*)response : nil;
                                    NSTimeInterval t = [[NSDate date] timeIntervalSinceDate:start];
-                                   NSLog(@"Wit response %ld (%f s) %@",
+                                   NSLog(@"Wit response %ld (%f s)",
                                          (long)[httpResp statusCode],
-                                         t,
-                                         [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                                         t);
                                }
 
                                if (connectionError) {
-                                   debug(@"Got connection error: %@", connectionError.localizedDescription);
-                                   [self.delegate gotResponse:nil error:connectionError];
+                                   debug(@"Wit connection error %@ (%ld)",
+                                         connectionError.domain,
+                                         (long)connectionError.code);
+                                   [self.delegate gotResponse:nil error:WITSanitizedTransportError(connectionError)];
                                    return;
                                }
 
-                               NSError *serializationError;
-                               NSDictionary *object = [NSJSONSerialization JSONObjectWithData:data
-                                                                                      options:0
-                                                                                        error:&serializationError];
-                               if (serializationError) {
-                                   [self.delegate gotResponse:nil error:serializationError];
+                               NSError *responseError = nil;
+                               NSDictionary *object = WITJSONObjectFromResponse(response, data, &responseError);
+                               if (!object) {
+                                   [self.delegate gotResponse:nil error:responseError];
                                    return;
                                }
 
                                if (object[@"error"]) {
-                                   debug(@"Wit error: %@", object[@"error"]);
-                                   NSDictionary *infos = @{NSLocalizedDescriptionKey: object[@"error"],
-                                                           kWitKeyError: object[@"code"]};
+                                   debug(@"Wit processing error");
                                    [self.delegate gotResponse:nil
                                                         error:[NSError errorWithDomain:@"WitProcessing"
                                                                                   code:1
-                                                                              userInfo:infos]];
+                                                                              userInfo:@{NSLocalizedDescriptionKey: @"The Wit service could not process the request."}]];
                                    return;
                                }
                                [self.delegate gotResponse:object error:nil];
@@ -123,7 +134,16 @@
             [q setSuspended:YES];
 
             debug(@"Uploading %u bytes", (unsigned int)[chunk length]);
-            [outStream write:[chunk bytes] maxLength:[chunk length]];
+            NSUInteger offset = 0;
+            while (offset < chunk.length) {
+                NSInteger written = [outStream write:((const uint8_t *)chunk.bytes) + offset
+                                            maxLength:chunk.length - offset];
+                if (written <= 0) {
+                    [self cleanUp];
+                    return;
+                }
+                offset += (NSUInteger)written;
+            }
         }
 
         NSUInteger cnt = q.operationCount;
@@ -196,6 +216,7 @@
         q = [[NSOperationQueue alloc] init];
         [q setMaxConcurrentOperationCount:1];
         kWitSpeechURL = [NSString stringWithFormat: @"%@/speech?v=%@", kWitAPIUrl, kWitAPIVersion];
+        self.requestGeneration = 0;
     }
 
     return self;

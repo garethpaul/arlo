@@ -1,7 +1,41 @@
 # Arlo Changes
 
+## 2026-06-19
+
+- Validated local Wit tokens before enabling voice UI, allocating audio, or constructing Authorization headers.
+- Moved audio-session activation into the owned recording lifecycle and added symmetric failure/stop deactivation.
+- Preserved recording-session ownership until its response arrives and rejected stale session and text-request completions.
+- Added bounded HTTPS query, status, MIME, response-size, JSON-object, and sanitized-error policy shared by speech and text requests.
+- Removed undeclared location permission, monitoring, and coordinate attachment from the vendored Wit context setter.
+- Added native fake-response tests, static lifecycle contracts, hostile mutations, and a hosted macOS compile gate.
+
+- Wit processing error diagnostics use a constant message and never provider response fields.
+- Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
+- Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
+- Removed full Wit response bodies from debug logs while retaining response
+  timing and HTTP status diagnostics.
+- Removed the compiled vendored Wit VAD diagnostic that logged configured
+  bearer tokens and request URLs, and added a fail-closed source contract.
+
+## 2026-06-14
+
+- Added an exact-commit Arlo device verification matrix for empty/configured
+  token modes, microphone permission, recording and waveform state, delegate
+  ownership, interruption, backgrounding, relaunch, and privacy-safe evidence, with every runtime row explicitly unexecuted.
+
+## 2026-06-13
+
+- Guarded empty-token launch and teardown paths before Wit singleton access while
+  preserving configured token, speech-stop, capture-stop, and delegate behavior.
+- Prevented the default empty-token build from configuring or activating a
+  play-and-record audio session during launch.
+- Preserved audio-session setup and caught failures for locally configured Wit
+  builds.
+
 ## 2026-06-12
 
+- Disabled checkout credential persistence in the canonical SDK-free Check job
+  and added exact repository contracts for that boundary.
 - Confined Wit audio-power and recording callback UI state to the main queue.
 - Added explicit recording state so late audio notifications cannot restore a
   stale waveform after capture stops.

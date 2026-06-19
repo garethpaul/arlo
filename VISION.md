@@ -24,6 +24,8 @@ Priority:
 - Keep Wit singleton teardown conditional on the calling controller still
   owning the delegate
 - Keep Wit delegate registration disabled while the committed token is empty
+- Keep empty-token launches from activating unavailable voice audio resources
+- Keep empty-token launch and teardown paths from initializing the Wit singleton
 - Keep waveform rendering resilient to malformed voice-power values
 - Keep asynchronous audio and recording UI state confined to the main queue
 - Ignore late Wit audio levels after recording becomes inactive
@@ -33,7 +35,11 @@ Priority:
 - Keep iOS privacy permission text specific to the app behavior that exists
 - Keep root lint, test, and build gates tied to the SDK-free iOS baseline
 - Keep GitHub Actions aligned with the SDK-free `make check` baseline
+- Keep non-persisted checkout credentials in hosted verification
 - Keep UI behavior simple enough to inspect from `ViewController.swift`
+- Keep exact-commit Arlo device verification matrix evidence separate from
+  portable checks, with unexecuted Xcode, microphone, Wit, and device rows
+  explicit
 
 Next priorities:
 
@@ -42,6 +48,8 @@ Next priorities:
 - Modernize Swift, iOS deployment target, Wit, and waveform dependencies in a
   dedicated pass
 - Add tests or manual verification notes for voice capture and speech output
+- Execute the device verification matrix with synthetic phrases and
+  privacy-safe permission, recording, lifecycle, and interruption evidence
 
 Contribution rules:
 
@@ -59,6 +67,13 @@ Canonical security policy and reporting:
 
 Voice input and intent recognition are sensitive. Do not commit access tokens,
 recorded audio, transcripts, or service credentials.
+Do not log configured voice-service tokens or credential-bearing request URLs,
+including from checked-in vendored SDK code.
+Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
+Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
+Wit processing error diagnostics use a constant message and never provider response fields.
+Do not log voice-service response bodies; retain only non-sensitive timing and
+status diagnostics.
 Do not declare unused privacy permissions, and keep microphone permission copy
 specific about user-triggered Wit voice capture.
 

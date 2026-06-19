@@ -36,6 +36,13 @@ Helpful reports include:
 - Keep asynchronous Wit audio and recording state confined to the main queue,
   ignore late power notifications after capture stops, and reject stale start
   callbacks after the voice view becomes inactive.
+- Keep configured Wit bearer tokens and request URLs out of application and
+  device logs, including diagnostics in checked-in vendored dependencies.
+- Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
+- Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
+- Wit processing error diagnostics use a constant message and never provider response fields.
+- Keep recognized speech and inferred Wit response entities out of application and device logs;
+  debug diagnostics should retain metadata only.
 - The hosted workflow uses a commit-pinned checkout action, read-only repository
   access, and a bounded runtime.
 
@@ -43,7 +50,16 @@ Helpful reports include:
 
 If this project requests device permissions such as location, camera, microphone, contacts, Bluetooth, health data, or local storage access, reports should describe the permission involved and whether sensitive data can be accessed, persisted, or transmitted unexpectedly. Please avoid testing against real third-party user data or accounts you do not control.
 
+Arlo's maintained voice path requests microphone access only after user action.
+It does not request or monitor location and does not automatically attach
+coordinates to Wit context. Wit tokens must not contain whitespace or control
+characters. HTTP failures, nested provider errors, URLs, response payloads, and
+transcripts must not be written to logs or propagated in diagnostic metadata.
+
 ## Dependency and Supply Chain Security
+
+The canonical Check job uses a read-only, non-persisted checkout token so later
+steps cannot reuse repository credentials from the working copy.
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
 
