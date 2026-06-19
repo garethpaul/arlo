@@ -14,9 +14,14 @@ MUTATIONS = (
     ("Pods/Wit/Wit/Wit.m", "session != self.recordingSession", "session == self.recordingSession"),
     ("Pods/Wit/Wit/WITUploader.m", "WITSanitizedTransportError(connectionError)", "connectionError"),
     ("Pods/Wit/Wit/WITUploader.m", "WITJSONObjectFromResponse(response, data, &responseError)", "[NSJSONSerialization JSONObjectWithData:data options:0 error:&responseError]"),
-    ("Pods/Wit/Wit/WITHTTPPolicy.m", "[mediaType hasPrefix:applicationPrefix]", "[mediaType hasPrefix:@\"text/\"]"),
-    ("Pods/Wit/Wit/WITHTTPPolicy.m", "[mediaType hasSuffix:jsonSuffix]", "[mediaType containsString:jsonSuffix]"),
-    ("Pods/Wit/Wit/WITHTTPPolicy.m", "mediaType.length > applicationPrefix.length + jsonSuffix.length", "mediaType.length >= applicationPrefix.length + jsonSuffix.length"),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", 'NSString *rawMediaType = [contentType componentsSeparatedByString:@";"][0];', 'NSString *rawMediaType = [contentType componentsSeparatedByString:@";"][0].lowercaseString;'),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", "if (!WITIsRestrictedName(subtype))", "if (NO)"),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", "name.length > 127", "name.length > 128"),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", "!WITIsASCIIAlphaNumeric([name characterAtIndex:0]) ||", "NO ||"),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", "!WITIsASCIIAlphaNumeric([name characterAtIndex:name.length - 1]))", "NO)"),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", "character == '_' || character == '.' || character == '+';", "character == '_' || character == '.' || character == '+' || character > 0x7f;"),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", "WITASCIILowercase([value characterAtIndex:index])", "[value characterAtIndex:index]"),
+    ("Pods/Wit/Wit/WITHTTPPolicy.m", "return WITASCIIStringEquals([value substringFromIndex:value.length - suffix.length], suffix);", "return [value.lowercaseString hasSuffix:suffix];"),
     ("Pods/Wit/Wit/WITUploader.m", "while (offset < chunk.length)", "if (offset < chunk.length)"),
     ("Pods/Wit/Wit/Wit.m", "[self.recordingSession stop];\n}", "[self.recordingSession stop];\n    self.recordingSession = nil;\n}"),
     ("Pods/Wit/Wit/WITContextSetter.m", "[self ensureReferenceTime:context];", "[locationManager requestWhenInUseAuthorization];\n    [self ensureReferenceTime:context];"),
@@ -31,10 +36,13 @@ FIXTURE_PATHS = {
     "Pods/Wit/Wit/WITRecordingSession.h",
     "Pods/Wit/Wit/WITUploader.m",
     "Pods/Wit/Wit/WITHTTPPolicy.m",
+    "Pods/Wit/Wit/WITHTTPPolicy.h",
     "Pods/Wit/Wit/WITContextSetter.m",
     "Pods/Wit/Wit/Wit.m",
     "Pods/Pods.xcodeproj/project.pbxproj",
     "tests/test-wit-lifecycle.py",
+    "tests/test-wit-http-policy.m",
+    "scripts/test-wit-http-policy.sh",
 }
 
 
@@ -50,11 +58,17 @@ for relative_path, old, new in MUTATIONS:
         if old not in content:
             raise AssertionError(f"mutation target missing: {relative_path}: {old}")
         path.write_text(content.replace(old, new, 1))
-        result = subprocess.run(
+        lifecycle_result = subprocess.run(
             ["python3", str(checkout / "tests/test-wit-lifecycle.py")],
             cwd=checkout,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        if result.returncode == 0:
+        native_result = subprocess.run(
+            ["sh", str(checkout / "scripts/test-wit-http-policy.sh")],
+            cwd=checkout,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if lifecycle_result.returncode == 0 and native_result.returncode == 0:
             raise AssertionError(f"mutation survived: {relative_path}: {old}")

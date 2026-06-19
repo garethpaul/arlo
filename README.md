@@ -131,9 +131,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
   newer visible voice screen.
 - Wit delegate registration is skipped while the committed token placeholder is
   empty.
-- Wit responses accept only `application/json` or a non-empty
-  `application/*+json` media type; suffix-like text in parameters or
-  non-application types is rejected before JSON parsing.
+- Wit responses accept only `application/json` or an RFC 6838 ASCII
+  restricted-name `application/*+json` media type. Unicode case-folding
+  lookalikes, suffix-like text in parameters, and non-application types are
+  rejected before JSON parsing.
 - The empty-token lifecycle does not initialize the Wit singleton during launch
   configuration or delegate teardown; configured local builds retain token,
   speech-stop, capture-stop, and ownership behavior.

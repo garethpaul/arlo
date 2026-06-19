@@ -10,22 +10,95 @@ static NSError *WITPolicyError(NSInteger code, NSString *description) {
                            userInfo:@{ NSLocalizedDescriptionKey: description }];
 }
 
+static BOOL WITIsASCIIAlphaNumeric(unichar character) {
+    return (character >= 'A' && character <= 'Z') ||
+           (character >= 'a' && character <= 'z') ||
+           (character >= '0' && character <= '9');
+}
+
+static BOOL WITIsRestrictedNameCharacter(unichar character) {
+    return WITIsASCIIAlphaNumeric(character) ||
+           character == '!' || character == '#' || character == '$' ||
+           character == '&' || character == '-' || character == '^' ||
+           character == '_' || character == '.' || character == '+';
+}
+
+static BOOL WITIsRestrictedName(NSString *name) {
+    if (name.length == 0 || name.length > 127 ||
+        !WITIsASCIIAlphaNumeric([name characterAtIndex:0]) ||
+        !WITIsASCIIAlphaNumeric([name characterAtIndex:name.length - 1])) {
+        return NO;
+    }
+
+    for (NSUInteger index = 1; index + 1 < name.length; index++) {
+        if (!WITIsRestrictedNameCharacter([name characterAtIndex:index])) {
+            return NO;
+        }
+    }
+    return YES;
+}
+
+static unichar WITASCIILowercase(unichar character) {
+    if (character >= 'A' && character <= 'Z') {
+        return character + ('a' - 'A');
+    }
+    return character;
+}
+
+static BOOL WITASCIIStringEquals(NSString *value, NSString *expected) {
+    if (value.length != expected.length) {
+        return NO;
+    }
+    for (NSUInteger index = 0; index < value.length; index++) {
+        if (WITASCIILowercase([value characterAtIndex:index]) !=
+            WITASCIILowercase([expected characterAtIndex:index])) {
+            return NO;
+        }
+    }
+    return YES;
+}
+
+static BOOL WITASCIIStringHasSuffix(NSString *value, NSString *suffix) {
+    if (value.length < suffix.length) {
+        return NO;
+    }
+    return WITASCIIStringEquals([value substringFromIndex:value.length - suffix.length], suffix);
+}
+
 static BOOL WITIsJSONContentType(NSString *contentType) {
     if (![contentType isKindOfClass:[NSString class]]) {
         return NO;
     }
 
-    NSString *mediaType = [[contentType componentsSeparatedByString:@";"][0]
-            stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]].lowercaseString;
-    if ([mediaType isEqualToString:@"application/json"]) {
+    NSString *rawMediaType = [contentType componentsSeparatedByString:@";"][0];
+    NSUInteger start = 0;
+    NSUInteger end = rawMediaType.length;
+    while (start < end && ([rawMediaType characterAtIndex:start] == ' ' ||
+                           [rawMediaType characterAtIndex:start] == '\t')) {
+        start++;
+    }
+    while (end > start && ([rawMediaType characterAtIndex:end - 1] == ' ' ||
+                           [rawMediaType characterAtIndex:end - 1] == '\t')) {
+        end--;
+    }
+
+    NSString *mediaType = [rawMediaType substringWithRange:NSMakeRange(start, end - start)];
+    NSRange separator = [mediaType rangeOfString:@"/"];
+    if (separator.location == NSNotFound ||
+        !WITASCIIStringEquals([mediaType substringToIndex:separator.location], @"application")) {
+        return NO;
+    }
+
+    NSString *subtype = [mediaType substringFromIndex:separator.location + 1];
+    if (!WITIsRestrictedName(subtype)) {
+        return NO;
+    }
+    if (WITASCIIStringEquals(subtype, @"json")) {
         return YES;
     }
 
-    NSString *applicationPrefix = @"application/";
     NSString *jsonSuffix = @"+json";
-    return [mediaType hasPrefix:applicationPrefix] &&
-           [mediaType hasSuffix:jsonSuffix] &&
-           mediaType.length > applicationPrefix.length + jsonSuffix.length;
+    return subtype.length > jsonSuffix.length && WITASCIIStringHasSuffix(subtype, jsonSuffix);
 }
 
 BOOL WITIsValidAccessToken(NSString *token) {

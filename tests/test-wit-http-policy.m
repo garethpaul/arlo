@@ -16,6 +16,25 @@ static NSHTTPURLResponse *response(NSInteger statusCode, NSString *contentType) 
                                     headerFields:@{ @"Content-Type": contentType }];
 }
 
+static NSData *jsonData(void) {
+    return [@"{\"outcomes\":[]}" dataUsingEncoding:NSUTF8StringEncoding];
+}
+
+static BOOL acceptsContentType(NSString *contentType) {
+    NSError *error = nil;
+    NSDictionary *object = WITJSONObjectFromResponse(response(200, contentType), jsonData(), &error);
+    return object != nil && error == nil;
+}
+
+static BOOL isAllowedRestrictedASCII(unichar character) {
+    return (character >= 'A' && character <= 'Z') ||
+           (character >= 'a' && character <= 'z') ||
+           (character >= '0' && character <= '9') ||
+           character == '!' || character == '#' || character == '$' ||
+           character == '&' || character == '-' || character == '^' ||
+           character == '_' || character == '.' || character == '+';
+}
+
 int main(void) {
     @autoreleasepool {
         require(!WITIsValidAccessToken(nil), @"nil tokens must be rejected");
@@ -58,6 +77,25 @@ int main(void) {
         require(object != nil && responseError == nil,
                 @"application structured JSON suffixes must pass");
 
+        for (NSString *contentType in @[
+                 @"APPLICATION/JSON",
+                 @" application/vnd.example_v2+json\t",
+                 @"application/foo!#$&^_.+-bar+json",
+                 @"application/problem+JSON; charset=utf-8",
+                 @"application/a+json; profile=\"https://example.test/schema\""
+             ]) {
+            require(acceptsContentType(contentType),
+                    @"valid RFC 6838 JSON media types and parameters must pass");
+        }
+
+        NSString *maximumSubtype = [[@"a" stringByPaddingToLength:122
+                                                        withString:@"a"
+                                                   startingAtIndex:0]
+                                    stringByAppendingString:@"+json"];
+        require(maximumSubtype.length == 127 &&
+                acceptsContentType([@"application/" stringByAppendingString:maximumSubtype]),
+                @"127-character restricted subtypes must pass");
+
         NSString *messageID = nil;
         NSError *intentError = nil;
         NSArray *outcomes = WITOutcomesFromJSONObject(@{ @"outcomes": @[ @{ @"intent": @"weather" } ], @"msg_id": @"message-1" },
@@ -91,9 +129,37 @@ int main(void) {
                                           &responseError) == nil,
                 @"non-JSON content types must be rejected");
 
+        require(!acceptsContentType(@"application/K+json"),
+                @"Unicode case folding must not turn Kelvin sign into an ASCII restricted name");
+
         for (NSString *contentType in @[
                  @"text/problem+json",
                  @"application/+json",
+                 @"application/Ｋ+json",
+                 @"application/ſ+json",
+                 @"application/İ+json",
+                 @"application/ı+json",
+                 @"application/µ+json",
+                 @"application/Μ+json",
+                 @"application/а+json",
+                 @"application/a\u030A+json",
+                 @"application/😀+json",
+                 @"application/foo\u00A0bar+json",
+                 @"application/foo\u200Bbar+json",
+                 @"application/foo\u2028bar+json",
+                 @"application/foo\u2029bar+json",
+                 @"application/foo\uFEFFbar+json",
+                 @"\u00A0application/json",
+                 @"application/json\u00A0",
+                 @"applicatioK/json",
+                 @"ａｐｐｌｉｃａｔｉｏｎ/json",
+                 @"application/foo\rbar+json",
+                 @"application/foo\nbar+json",
+                 @"application/foo\tbar+json",
+                 @"application/-problem+json",
+                 @"application/.problem+json",
+                 @"application/problem()+json",
+                 @"application/problem@+json",
                  @"application/problem+jsonp",
                  @"text/plain; note=+json"
              ]) {
@@ -104,6 +170,51 @@ int main(void) {
                         &responseError) == nil && responseError != nil,
                     @"JSON media types must be application/json or application/*+json");
         }
+
+        NSString *deleteControl = [NSString stringWithFormat:@"application/foo%Cbar+json", (unichar)0x7f];
+        require(!acceptsContentType(deleteControl), @"DEL must be rejected inside restricted subtypes");
+
+        for (NSUInteger surrogateIndex = 0; surrogateIndex < 2; surrogateIndex++) {
+            const unichar surrogates[] = { 0xd800, 0xdfff };
+            NSString *contentType = [NSString stringWithFormat:@"application/foo%Cbar+json", surrogates[surrogateIndex]];
+            require(!acceptsContentType(contentType), @"unpaired UTF-16 surrogates must be rejected");
+        }
+
+        for (unichar character = 0; character < 0x20; character++) {
+            NSString *contentType = [NSString stringWithFormat:@"application/foo%Cbar+json", character];
+            require(!acceptsContentType(contentType), @"ASCII controls must be rejected inside restricted subtypes");
+        }
+
+        for (unichar character = 0x21; character <= 0x7e; character++) {
+            if (!isAllowedRestrictedASCII(character)) {
+                NSString *contentType = [NSString stringWithFormat:@"application/foo%Cbar+json", character];
+                require(!acceptsContentType(contentType), @"disallowed ASCII punctuation must be rejected");
+            }
+        }
+
+        for (NSUInteger rangeIndex = 0; rangeIndex < 3; rangeIndex++) {
+            const unichar starts[] = { 0x0080, 0x2000, 0xff00 };
+            const unichar ends[] = { 0x02ff, 0x214f, 0xffef };
+            for (NSUInteger codePoint = starts[rangeIndex]; codePoint <= ends[rangeIndex]; codePoint++) {
+                unichar character = (unichar)codePoint;
+                NSString *contentType = [NSString stringWithFormat:@"application/foo%Cbar+json", character];
+                require(!acceptsContentType(contentType), @"non-ASCII code units must be rejected before case folding");
+            }
+        }
+
+        NSString *overlongSubtype = [[@"a" stringByPaddingToLength:123
+                                                        withString:@"a"
+                                                   startingAtIndex:0]
+                                     stringByAppendingString:@"+json"];
+        require(overlongSubtype.length == 128 &&
+                !acceptsContentType([@"application/" stringByAppendingString:overlongSubtype]),
+                @"128-character restricted subtypes must be rejected");
+        NSString *veryLongSubtype = [[@"a" stringByPaddingToLength:4091
+                                                       withString:@"a"
+                                                  startingAtIndex:0]
+                                     stringByAppendingString:@"+json"];
+        require(!acceptsContentType([@"application/" stringByAppendingString:veryLongSubtype]),
+                @"very long restricted subtypes must be rejected without truncation");
 
         responseError = nil;
         NSMutableData *oversized = [NSMutableData dataWithLength:WITMaximumResponseBytes + 1];
