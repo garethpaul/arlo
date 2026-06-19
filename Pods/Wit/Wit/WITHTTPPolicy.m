@@ -10,6 +10,24 @@ static NSError *WITPolicyError(NSInteger code, NSString *description) {
                            userInfo:@{ NSLocalizedDescriptionKey: description }];
 }
 
+static BOOL WITIsJSONContentType(NSString *contentType) {
+    if (![contentType isKindOfClass:[NSString class]]) {
+        return NO;
+    }
+
+    NSString *mediaType = [[contentType componentsSeparatedByString:@";"][0]
+            stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]].lowercaseString;
+    if ([mediaType isEqualToString:@"application/json"]) {
+        return YES;
+    }
+
+    NSString *applicationPrefix = @"application/";
+    NSString *jsonSuffix = @"+json";
+    return [mediaType hasPrefix:applicationPrefix] &&
+           [mediaType hasSuffix:jsonSuffix] &&
+           mediaType.length > applicationPrefix.length + jsonSuffix.length;
+}
+
 BOOL WITIsValidAccessToken(NSString *token) {
     if (![token isKindOfClass:[NSString class]] || token.length == 0 || token.length > 4096) {
         return NO;
@@ -92,8 +110,8 @@ NSDictionary *WITJSONObjectFromResponse(NSURLResponse *response, NSData *data, N
         return nil;
     }
 
-    NSString *contentType = [httpResponse.allHeaderFields[@"Content-Type"] description].lowercaseString;
-    if (![contentType hasPrefix:@"application/json"] && [contentType rangeOfString:@"+json"].location == NSNotFound) {
+    NSString *contentType = [httpResponse.allHeaderFields[@"Content-Type"] description];
+    if (!WITIsJSONContentType(contentType)) {
         if (error) {
             *error = WITPolicyError(4, @"The Wit response was not JSON.");
         }

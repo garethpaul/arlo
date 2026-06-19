@@ -8,6 +8,8 @@
 - Added bounded HTTPS query, status, MIME, response-size, JSON-object, and sanitized-error policy shared by speech and text requests.
 - Removed undeclared location permission, monitoring, and coordinate attachment from the vendored Wit context setter.
 - Added native fake-response tests, static lifecycle contracts, hostile mutations, and a hosted macOS compile gate.
+- Restricted accepted response media types to `application/json` or a non-empty
+  `application/*+json` subtype after parameter normalization.
 
 - Wit processing error diagnostics use a constant message and never provider response fields.
 - Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.

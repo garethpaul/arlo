@@ -12,6 +12,7 @@ app_delegate = source("Arlo/AppDelegate.swift")
 recording = source("Pods/Wit/Wit/WITRecordingSession.m")
 recording_header = source("Pods/Wit/Wit/WITRecordingSession.h")
 uploader = source("Pods/Wit/Wit/WITUploader.m")
+http_policy = source("Pods/Wit/Wit/WITHTTPPolicy.m")
 context_setter = source("Pods/Wit/Wit/WITContextSetter.m")
 wit = source("Pods/Wit/Wit/Wit.m")
 pod_project = source("Pods/Pods.xcodeproj/project.pbxproj")
@@ -41,6 +42,11 @@ assert "WITURLByAppendingQueryItems" in uploader, "context must be appended as o
 assert "WITJSONObjectFromResponse" in uploader, "speech responses need status, size, MIME, and JSON validation"
 assert "WITSanitizedTransportError" in uploader, "transport diagnostics must strip nested URLs and payloads"
 assert "WITIsValidAccessToken(token)" in uploader, "authorization headers need strict token validation"
+assert 'componentsSeparatedByString:@";"' in http_policy, "response media types must be normalized before parameters"
+assert '[mediaType isEqualToString:@"application/json"]' in http_policy, "canonical JSON media types must be accepted"
+assert "[mediaType hasPrefix:applicationPrefix]" in http_policy, "structured JSON suffixes must stay in the application tree"
+assert "[mediaType hasSuffix:jsonSuffix]" in http_policy, "structured JSON suffixes must end with +json"
+assert "mediaType.length > applicationPrefix.length + jsonSuffix.length" in http_policy, "structured JSON suffixes need a non-empty subtype"
 
 assert "requestWhenInUseAuthorization" not in context_setter, "voice capture must not prompt for undeclared location access"
 assert "startMonitoringSignificantLocationChanges" not in context_setter, "voice capture must not start background location monitoring"

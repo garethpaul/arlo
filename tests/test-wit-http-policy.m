@@ -49,6 +49,15 @@ int main(void) {
         );
         require(object != nil && responseError == nil, @"valid JSON object responses must pass");
 
+        responseError = nil;
+        object = WITJSONObjectFromResponse(
+            response(200, @"application/problem+json; charset=utf-8"),
+            [@"{\"outcomes\":[]}" dataUsingEncoding:NSUTF8StringEncoding],
+            &responseError
+        );
+        require(object != nil && responseError == nil,
+                @"application structured JSON suffixes must pass");
+
         NSString *messageID = nil;
         NSError *intentError = nil;
         NSArray *outcomes = WITOutcomesFromJSONObject(@{ @"outcomes": @[ @{ @"intent": @"weather" } ], @"msg_id": @"message-1" },
@@ -81,6 +90,20 @@ int main(void) {
                                           [@"<html>secret</html>" dataUsingEncoding:NSUTF8StringEncoding],
                                           &responseError) == nil,
                 @"non-JSON content types must be rejected");
+
+        for (NSString *contentType in @[
+                 @"text/problem+json",
+                 @"application/+json",
+                 @"application/problem+jsonp",
+                 @"text/plain; note=+json"
+             ]) {
+            responseError = nil;
+            require(WITJSONObjectFromResponse(
+                        response(200, contentType),
+                        [@"{\"outcomes\":[]}" dataUsingEncoding:NSUTF8StringEncoding],
+                        &responseError) == nil && responseError != nil,
+                    @"JSON media types must be application/json or application/*+json");
+        }
 
         responseError = nil;
         NSMutableData *oversized = [NSMutableData dataWithLength:WITMaximumResponseBytes + 1];
