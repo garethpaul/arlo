@@ -157,14 +157,14 @@ done
 
 if ! grep -Fq 'debug(@"Wit processing error");' "$WIT_UPLOADER" || \
    ! grep -Fq 'if (object[@"error"]) {' "$WIT_UPLOADER" || \
-   ! grep -Fq 'NSLocalizedDescriptionKey: object[@"error"],' "$WIT_UPLOADER" || \
-   ! grep -Fq 'kWitKeyError: object[@"code"]' "$WIT_UPLOADER"; then
-  printf '%s\n' "Wit processing error redaction must preserve constant diagnostics and NSError propagation." >&2
+   ! grep -Fq 'NSLocalizedDescriptionKey: @"The Wit service could not process the request."' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit processing errors must propagate only a constant description." >&2
   exit 1
 fi
 
-if [ "$(grep -Fc 'object[@"error"]' "$WIT_UPLOADER")" -ne 2 ]; then
-  printf '%s\n' "Wit processing error response fields must not cross into diagnostics." >&2
+if grep -Fq 'NSLocalizedDescriptionKey: object[@"error"]' "$WIT_UPLOADER" || \
+   grep -Fq 'kWitKeyError: object[@"code"]' "$WIT_UPLOADER"; then
+  printf '%s\n' "Wit processing error fields must not cross into propagated NSError metadata." >&2
   exit 1
 fi
 
@@ -229,9 +229,10 @@ if ! grep -Fq "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" "$CI_W
   exit 1
 fi
 
-if [ "$(grep -Fc 'uses: actions/checkout@' "$CI_WORKFLOW")" -ne 1 ] || \
-   [ "$(grep -Fc 'persist-credentials: false' "$CI_WORKFLOW")" -ne 1 ]; then
-  printf '%s\n' "The only checkout step must disable credential persistence." >&2
+checkout_count=$(grep -Fc 'uses: actions/checkout@' "$CI_WORKFLOW")
+if [ "$checkout_count" -eq 0 ] || \
+   [ "$(grep -Fc 'persist-credentials: false' "$CI_WORKFLOW")" -ne "$checkout_count" ]; then
+  printf '%s\n' "Every checkout step must disable credential persistence." >&2
   exit 1
 fi
 
@@ -259,8 +260,15 @@ fi
 if [ "$(grep -Ec '^[[:space:]]*permissions:' "$CI_WORKFLOW")" -ne 1 ] || \
    [ "$(grep -Ec '^[[:space:]]+contents:[[:space:]]*read[[:space:]]*$' "$CI_WORKFLOW")" -ne 1 ] || \
    grep -Eq 'write-all|:[[:space:]]*write|continue-on-error:[[:space:]]*true|if:[[:space:]]*false' "$CI_WORKFLOW" || \
-   [ "$(grep -Ec '^[[:space:]]*(-[[:space:]]+)?run:' "$CI_WORKFLOW")" -ne 1 ]; then
-  printf '%s\n' "Check workflow must keep exact read-only permissions and one required command." >&2
+   [ "$(grep -Ec '^[[:space:]]*(-[[:space:]]+)?run:' "$CI_WORKFLOW")" -ne 3 ]; then
+  printf '%s\n' "Check workflow must keep exact read-only permissions and the three reviewed commands." >&2
+  exit 1
+fi
+
+if ! grep -Fq 'runs-on: macos-15' "$CI_WORKFLOW" || \
+   ! grep -Fq 'run: scripts/test-wit-http-policy.sh' "$CI_WORKFLOW" || \
+   ! grep -Fq 'Pods/Wit/Wit/WITHTTPPolicy.m' "$CI_WORKFLOW"; then
+  printf '%s\n' "Check workflow must run native policy tests and compile maintained Wit sources." >&2
   exit 1
 fi
 
@@ -443,8 +451,8 @@ if grep -Fq "try!" "$APP_DELEGATE"; then
   exit 1
 fi
 
-if ! grep -Fq "import AVFoundation" "$APP_DELEGATE"; then
-  printf '%s\n' "AppDelegate must import AVFoundation explicitly for audio session setup." >&2
+if grep -Fq "setActive(true)" "$APP_DELEGATE" || grep -Fq "configureAudioSession()" "$APP_DELEGATE"; then
+  printf '%s\n' "Application launch must not reserve the microphone audio session." >&2
   exit 1
 fi
 
@@ -463,24 +471,17 @@ if ! grep -Fq "static var isWitConfigured: Bool" "$APP_DELEGATE"; then
   exit 1
 fi
 
-if ! grep -Fq "return !witAccessToken.isEmpty" "$APP_DELEGATE"; then
-  printf '%s\n' "Wit configuration state must derive from the committed token placeholder." >&2
+if ! grep -Fq "witAccessToken.characters.count <= 4096" "$APP_DELEGATE" || \
+   ! grep -Fq "CharacterSet.whitespacesAndNewlines" "$APP_DELEGATE" || \
+   ! grep -Fq "CharacterSet.controlCharacters" "$APP_DELEGATE"; then
+  printf '%s\n' "Wit configuration state must reject oversized, whitespace-bearing, and control-bearing tokens." >&2
   exit 1
 fi
 
-audio_session_body=$(sed -n '/private func configureAudioSession()/,/^    }/p' "$APP_DELEGATE")
-if ! printf '%s\n' "$audio_session_body" | grep -Fq "guard AppDelegate.isWitConfigured else"; then
-  printf '%s\n' "Audio session setup must return while the committed Wit token is empty." >&2
-  exit 1
-fi
-
-audio_guard_line=$(printf '%s\n' "$audio_session_body" | grep -nF "guard AppDelegate.isWitConfigured else" | cut -d: -f1)
-audio_category_line=$(printf '%s\n' "$audio_session_body" | grep -nF "setCategory(AVAudioSessionCategoryPlayAndRecord)" | cut -d: -f1)
-audio_active_line=$(printf '%s\n' "$audio_session_body" | grep -nF "setActive(true)" | cut -d: -f1)
-if [ -z "$audio_guard_line" ] || [ -z "$audio_category_line" ] || \
-   [ -z "$audio_active_line" ] || [ "$audio_guard_line" -ge "$audio_category_line" ] || \
-   [ "$audio_category_line" -ge "$audio_active_line" ]; then
-  printf '%s\n' "Empty-token guard must precede audio category selection and activation." >&2
+if ! grep -Fq 'WITIsValidAccessToken(witToken)' "$ROOT_DIR/Pods/Wit/Wit/WITRecordingSession.m" || \
+   ! grep -Fq 'setActive:YES' "$ROOT_DIR/Pods/Wit/Wit/WITRecordingSession.m" || \
+   ! grep -Fq 'setActive:NO' "$ROOT_DIR/Pods/Wit/Wit/WITRecordingSession.m"; then
+  printf '%s\n' "Wit recording must validate configuration and own symmetric audio activation." >&2
   exit 1
 fi
 
@@ -921,8 +922,8 @@ if ! grep -Fq "non-finite Wit audio-power values" "$ROOT_DIR/README.md"; then
   exit 1
 fi
 
-if ! grep -Fq "The voice button stays disabled until a non-empty local Wit access token is supplied" "$ROOT_DIR/README.md"; then
-  printf '%s\n' "README must document the empty-token voice button guard." >&2
+if ! grep -Fq "The voice button stays disabled until a bounded local Wit access token without whitespace or control characters is supplied" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "README must document the validated Wit token guard." >&2
   exit 1
 fi
 

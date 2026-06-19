@@ -26,6 +26,7 @@
 
 
 -(id)initWithWitContext:(NSDictionary *)upContext vadEnabled:(WITVadConfig)vadEnabled withWitToken:(NSString *)witToken withDelegate:(id<WITRecordingSessionDelegate>)delegate;
+-(BOOL)start;
 -(void)stop;
 -(BOOL)isRecording;
 -(void)trackVad:(NSString *)messageId;
@@ -35,11 +36,11 @@
 
 @protocol WITRecordingSessionDelegate <NSObject>
 
--(void)recordingSessionActivityDetectorStarted;
--(void)recordingSessionDidStartRecording;
--(void)recordingSessionDidStopRecording;
--(void)recordingSessionRecorderGotChunk:(NSData*)chunk;
--(void)recordingSessionGotResponse:(NSDictionary*)resp customData:(id)customData error:(NSError*)err;
+-(void)recordingSessionActivityDetectorStarted:(WITRecordingSession *)session;
+-(void)recordingSessionDidStartRecording:(WITRecordingSession *)session;
+-(void)recordingSessionDidStopRecording:(WITRecordingSession *)session;
+-(void)recordingSession:(WITRecordingSession *)session recorderGotChunk:(NSData*)chunk;
+-(void)recordingSession:(WITRecordingSession *)session gotResponse:(NSDictionary*)resp customData:(id)customData error:(NSError*)err;
 
 -(void)stop;
 

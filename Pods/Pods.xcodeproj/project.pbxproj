@@ -34,6 +34,7 @@
 		8738EC6FBAA43D152CB1C53C1015F762 /* Pods-ArloUITests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 774B147003233D702AE42CC70B2F59E8 /* Pods-ArloUITests-dummy.m */; };
 		895AA6DBFB1963D2EA7E95BFF3420883 /* WITCvad.m in Sources */ = {isa = PBXBuildFile; fileRef = 213A5628C8DCFAB9C2BFDEB00594689D /* WITCvad.m */; };
 		94AAF23C988632E5B430B7A3D4FA65CD /* WITUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 72869BE6AFA8DC3AF4504FB61CD0CE95 /* WITUploader.m */; };
+		A7F1E3D4C5B6978877665544 /* WITHTTPPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = A7F1E3D4C5B6978877665545 /* WITHTTPPolicy.m */; };
 		98E3216FE4CF652AF1CA774CFA3EA185 /* RecordingSessionStarter.h in Headers */ = {isa = PBXBuildFile; fileRef = 593292CFD5DBB4E3B5D8D93591DA306B /* RecordingSessionStarter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9DC26DCB7E16AE64FAE8D3E642488006 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB80B4EAF70D785F9D3FE02CB343FE09 /* AudioToolbox.framework */; };
 		A0341868FF0B4819A84C3963085C36B2 /* util.m in Sources */ = {isa = PBXBuildFile; fileRef = 559E716E7A937CF0F41D857EF4F0AAC5 /* util.m */; };
@@ -115,6 +116,8 @@
 		6F151848D069FD1F337E453AF294ACC9 /* WITContextSetter.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = WITContextSetter.h; path = Wit/WITContextSetter.h; sourceTree = "<group>"; };
 		715DA52D4E7B41E40C1F0CC922D94511 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		72869BE6AFA8DC3AF4504FB61CD0CE95 /* WITUploader.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = WITUploader.m; path = Wit/WITUploader.m; sourceTree = "<group>"; };
+		A7F1E3D4C5B6978877665545 /* WITHTTPPolicy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = WITHTTPPolicy.m; path = Wit/WITHTTPPolicy.m; sourceTree = "<group>"; };
+		A7F1E3D4C5B6978877665546 /* WITHTTPPolicy.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = WITHTTPPolicy.h; path = Wit/WITHTTPPolicy.h; sourceTree = "<group>"; };
 		734C8DC3C87A57E29A41C02ED0D6210F /* Wit-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Wit-dummy.m"; sourceTree = "<group>"; };
 		73E07256F2DB695F77880C8DD5CB0D5B /* SCSiriWaveformView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = SCSiriWaveformView.h; path = SCSiriWaveformView/SCSiriWaveformView.h; sourceTree = "<group>"; };
 		7703678252E54DDA106830F9CBEF12D8 /* Pods_ArloUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ArloUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -256,6 +259,8 @@
 				58D853436BF4401E71FFADE8954D1E30 /* WITState.m */,
 				44DAFBF73C8380211D2273EA23959B74 /* WITUploader.h */,
 				72869BE6AFA8DC3AF4504FB61CD0CE95 /* WITUploader.m */,
+				A7F1E3D4C5B6978877665546 /* WITHTTPPolicy.h */,
+				A7F1E3D4C5B6978877665545 /* WITHTTPPolicy.m */,
 				114CB5F313AA12B88AC223225F0A4426 /* WITVad.h */,
 				F086BFC5C961E84FCC85E9D3FE2ABCB4 /* WITVad.m */,
 				CC6F65E65028E6D8D56FA667C4A67702 /* WITVadConfig.h */,
@@ -602,6 +607,7 @@
 				3B07A354DE879D96E239795A75EDC8C9 /* WITRecordingSession.m in Sources */,
 				2816FA576D248AD56E6FF56C4DA4C3A8 /* WITState.m in Sources */,
 				94AAF23C988632E5B430B7A3D4FA65CD /* WITUploader.m in Sources */,
+				A7F1E3D4C5B6978877665544 /* WITHTTPPolicy.m in Sources */,
 				BFCEC8DDD584B459DFF0619E7BE2F35E /* WITVad.m in Sources */,
 				D7F3FEC57818949C8F1ADF20FDF9871B /* WITVadSimple.m in Sources */,
 				2190B2A30C58E4EF42F755A4E883348E /* WITVadTracker.m in Sources */,

@@ -37,10 +37,12 @@ evidence cannot be transferred to a different build.
 | --- | --- | --- | --- |
 | Empty-token launch | Voice control remains disabled and no Wit singleton or play-and-record audio session is initialized. | `not run` | `not run` |
 | Empty-token teardown | Dismissal and teardown avoid Wit singleton access and audio-session mutation. | `not run` | `not run` |
-| Configured-token launch | A locally configured token preserves guarded audio setup and enables voice only after readiness. | `not run` | `not run` |
+| Configured-token launch | A valid locally configured token enables voice without activating the audio session before user capture. | `not run` | `not run` |
 | Microphone permission denied | Denial leaves capture inactive, waveform reset, and the UI usable without repeated background capture. | `not run` | `not run` |
 | Microphone permission granted | User-triggered capture starts only after permission and visible-controller ownership. | `not run` | `not run` |
-| Recording start and stop | Recording state, display link, button state, and waveform transition on the main queue. | `not run` | `not run` |
+| Recording start and stop | Recording state, display link, button state, and waveform transition on the main queue; the audio session activates for capture and deactivates after stop. | `not run` | `not run` |
+| Wit response boundaries | Non-2xx, non-JSON, oversized, malformed, and non-object responses fail without displaying or logging provider payloads. | `not run` | `not run` |
+| Location privacy | Voice capture does not request location permission, start location monitoring, or attach coordinates. | `not run` | `not run` |
 | Waveform finite values | Non-finite and missing audio-power values render as silence rather than corrupting the waveform. | `not run` | `not run` |
 | Missing waveform outlet | A missing storyboard outlet does not crash asynchronous audio-power handling. | `not run` | `not run` |
 | Late audio power | Queued power notifications after capture stops cannot reactivate the waveform. | `not run` | `not run` |

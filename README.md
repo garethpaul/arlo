@@ -72,24 +72,28 @@ Arlo voice matrix. It covers empty/configured token modes, microphone
 permission, recording and waveform state, delegate ownership, interruptions,
 backgrounding, relaunch, privacy-safe evidence, and explicit unexecuted rows.
 
-GitHub Actions runs the SDK-free `make check` baseline on Ubuntu for pushes,
-pull requests, and manual dispatches. The workflow uses a commit-pinned
-checkout action, read-only repository access, and a bounded runtime. Full
-workspace and simulator verification remain a macOS legacy toolchain task.
-The job does not persist checkout credentials after source retrieval.
+GitHub Actions runs the SDK-free `make check` baseline on Ubuntu and native
+Foundation policy tests plus maintained Objective-C source compilation on
+macOS for pushes, pull requests, and manual dispatches. The workflow uses a
+commit-pinned checkout action, read-only repository access, bounded runtimes,
+and does not persist checkout credentials. Full workspace and simulator
+verification remain a macOS legacy-toolchain task.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
 
 - The scan found credential-adjacent names. Review configuration paths before running against real accounts.
-- The voice button stays disabled until a non-empty local Wit access token is supplied outside the committed placeholder.
+- The voice button stays disabled until a bounded local Wit access token without whitespace or control characters is supplied outside the committed placeholder.
 - The compiled vendored Wit VAD tracker sends a configured token only in the
   Authorization header and never writes the token or request URL to device logs.
 - Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.
 - Wit processing error diagnostics use a constant message and never provider response fields.
 - Wit response diagnostics retain timing and status metadata without logging response bodies.
+- Wit HTTP responses must be successful JSON objects within a one-megabyte limit; nested provider errors, request URLs, and payloads are not propagated through diagnostic errors.
+- Voice capture activates the play-and-record session only after an owned recording session starts and deactivates it on failure or stop.
+- The vendored Wit context setter no longer prompts for location, starts location monitoring, or attaches coordinates to voice requests.
 
 ## Security and Privacy Notes
 
@@ -130,9 +134,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The empty-token lifecycle does not initialize the Wit singleton during launch
   configuration or delegate teardown; configured local builds retain token,
   speech-stop, capture-stop, and ownership behavior.
-- The microphone permission text describes user-triggered Wit voice capture, and
-  no location permission text is declared because this source tree has no
-  location flow.
+- The microphone permission text describes user-triggered Wit voice capture.
+  No location permission text is declared, and the maintained vendored Wit
+  context helper no longer requests, monitors, or transmits location.
 - Root `make lint`, `make test`, `make build`, and `make check` keep the
   SDK-free baseline available before macOS-only workspace verification,
   including when invoked outside the repository root with `make -f`.

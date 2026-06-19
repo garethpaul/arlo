@@ -9,12 +9,15 @@
 #import "WITRecordingSession.h"
 #import "WITVadConfig.h"
 #import "WITContextSetter.h"
+#import "WITHTTPPolicy.h"
+#import <AVFoundation/AVFoundation.h>
 
 @interface WITRecordingSession ()
 
 @property WITVadConfig vadEnabled;
 @property NSMutableArray *dataBuffer;
 @property int buffersToSave;
+@property BOOL stopped;
 @end
 
 @implementation WITRecordingSession {
@@ -24,6 +27,10 @@ WITContextSetter *wcs;
 -(id)initWithWitContext:(NSMutableDictionary *)upContext vadEnabled:(WITVadConfig)vadEnabled withWitToken:(NSString *)witToken withDelegate:(id<WITRecordingSessionDelegate>)delegate {
     self = [super init];
     if (self) {
+        if (!WITIsValidAccessToken(witToken)) {
+            return nil;
+        }
+
         self.delegate = delegate;
         self.dataBuffer = [[NSMutableArray alloc] init];
         self.vadEnabled = vadEnabled;
@@ -33,38 +40,66 @@ WITContextSetter *wcs;
         self.context = upContext;
         self.recorder = [[WITRecorder alloc] init];
         self.recorder.delegate = self;
-        [self.recorder start];
         self.witToken = witToken;
+        self.stopped = NO;
         self.buffersToSave = 25; //hardcode for now
-        if (vadEnabled == WITVadConfigDisabled) {
-            [self startUploader];
-        } else  {
-            [self.recorder enabledVad];
-            if (vadEnabled == WITVadConfigDetectSpeechStop) {
-                [self startUploader];
-            } else if (vadEnabled == WITVadConfigFull) {
-                
-            }
-        }
     }
     
     return self;
 }
 
--(void)startUploader
+-(BOOL)start
+{
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    NSError *audioError = nil;
+    if (![audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:&audioError] ||
+        ![audioSession setActive:YES error:&audioError]) {
+        return NO;
+    }
+
+    [self.recorder start];
+    if (self.vadEnabled == WITVadConfigDisabled) {
+        return [self startUploader];
+    }
+
+    [self.recorder enabledVad];
+    if (self.vadEnabled == WITVadConfigDetectSpeechStop) {
+        return [self startUploader];
+    }
+    return YES;
+}
+
+-(BOOL)startUploader
 {
     [[Wit sharedInstance].wcs contextFillup:self.context];
-    [self.uploader startRequestWithContext:self.context];
+    if (![self.uploader startRequestWithContext:self.context]) {
+        [[AVAudioSession sharedInstance] setActive:NO
+                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                                             error:nil];
+        return NO;
+    }
     self.isUploading = true;
-    [self.delegate recordingSessionDidStartRecording];
+    [self.delegate recordingSessionDidStartRecording:self];
+    return YES;
 }
 
 -(void)stop
 {
+        if (self.stopped) {
+            return;
+        }
+        self.stopped = YES;
         [self.recorder stop];
         [self.uploader endRequest];
         self.isUploading = false;
-        [self.delegate recordingSessionDidStopRecording];
+        NSError *audioError = nil;
+        [[AVAudioSession sharedInstance] setActive:NO
+                                       withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                                             error:&audioError];
+        if (audioError) {
+            debug(@"Unable to deactivate Wit audio session");
+        }
+        [self.delegate recordingSessionDidStopRecording:self];
 
 }
 
@@ -73,15 +108,15 @@ WITContextSetter *wcs;
 }
 
 -(void)gotResponse:(NSDictionary*)resp error:(NSError*)err {
+    if (err) {
+        NSLog(@"Wit stopped recording because of a network error");
+        [self stop];
+    }
 
-    [self.delegate recordingSessionGotResponse:resp customData:self.customData error:err];
-    
+    [self.delegate recordingSession:self gotResponse:resp customData:self.customData error:err];
+
     if (!err && resp[kWitKeyMsgId]) {
         [self trackVad:resp[kWitKeyMsgId]];
-    }
-    if (err) {
-        NSLog(@"Wit stopped recording because of a (network?) error");
-        [self stop];
     }
     [self clean];
 }
@@ -110,7 +145,7 @@ WITContextSetter *wcs;
         //enqueue the new data
         [self.dataBuffer addObject:chunk];
     }
-        [self.delegate recordingSessionRecorderGotChunk:chunk];
+        [self.delegate recordingSession:self recorderGotChunk:chunk];
     });
 }
 
@@ -118,7 +153,10 @@ WITContextSetter *wcs;
     if (self.vadEnabled == WITVadConfigFull) {
         dispatch_async(dispatch_get_main_queue(), ^{
             //start the uploader
-            [self startUploader];
+            if (![self startUploader]) {
+                [self stop];
+                return;
+            }
     
             //then prepend buffered data
             for(NSData* bufferedData in self.dataBuffer){
@@ -129,7 +167,7 @@ WITContextSetter *wcs;
 }
 
 -(void)recorderStarted {
-    [self.delegate recordingSessionActivityDetectorStarted];
+    [self.delegate recordingSessionActivityDetectorStarted:self];
 }
 
 

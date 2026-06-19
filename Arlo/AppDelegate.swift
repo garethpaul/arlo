@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import AVFoundation
 import Wit
 
 @UIApplicationMain
@@ -15,28 +14,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     private static let witAccessToken = ""
     static var isWitConfigured: Bool {
-        return !witAccessToken.isEmpty
+        guard !witAccessToken.isEmpty && witAccessToken.characters.count <= 4096 else {
+            return false
+        }
+        return witAccessToken.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines) == nil &&
+            witAccessToken.rangeOfCharacter(from: CharacterSet.controlCharacters) == nil
     }
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        configureAudioSession()
         configureWit()
         return true
-    }
-
-    private func configureAudioSession() {
-        guard AppDelegate.isWitConfigured else {
-            return
-        }
-
-        do {
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayAndRecord)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            NSLog("Unable to configure audio session: %@", String(describing: error))
-        }
     }
 
     private func configureWit() {

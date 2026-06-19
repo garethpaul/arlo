@@ -50,6 +50,12 @@ Helpful reports include:
 
 If this project requests device permissions such as location, camera, microphone, contacts, Bluetooth, health data, or local storage access, reports should describe the permission involved and whether sensitive data can be accessed, persisted, or transmitted unexpectedly. Please avoid testing against real third-party user data or accounts you do not control.
 
+Arlo's maintained voice path requests microphone access only after user action.
+It does not request or monitor location and does not automatically attach
+coordinates to Wit context. Wit tokens must not contain whitespace or control
+characters. HTTP failures, nested provider errors, URLs, response payloads, and
+transcripts must not be written to logs or propagated in diagnostic metadata.
+
 ## Dependency and Supply Chain Security
 
 The canonical Check job uses a read-only, non-persisted checkout token so later
