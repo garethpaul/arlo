@@ -12,6 +12,7 @@ app_delegate = source("Arlo/AppDelegate.swift")
 recording = source("Pods/Wit/Wit/WITRecordingSession.m")
 recording_header = source("Pods/Wit/Wit/WITRecordingSession.h")
 uploader = source("Pods/Wit/Wit/WITUploader.m")
+http_policy = source("Pods/Wit/Wit/WITHTTPPolicy.m")
 context_setter = source("Pods/Wit/Wit/WITContextSetter.m")
 wit = source("Pods/Wit/Wit/Wit.m")
 pod_project = source("Pods/Pods.xcodeproj/project.pbxproj")
@@ -41,6 +42,25 @@ assert "WITURLByAppendingQueryItems" in uploader, "context must be appended as o
 assert "WITJSONObjectFromResponse" in uploader, "speech responses need status, size, MIME, and JSON validation"
 assert "WITSanitizedTransportError" in uploader, "transport diagnostics must strip nested URLs and payloads"
 assert "WITIsValidAccessToken(token)" in uploader, "authorization headers need strict token validation"
+assert 'componentsSeparatedByString:@";"' in http_policy, "response media types must be separated from parameters"
+content_type_policy = http_policy.split("static BOOL WITIsJSONContentType", 1)[1].split("BOOL WITIsValidAccessToken", 1)[0]
+assert "lowercaseString" not in content_type_policy, "untrusted media types must not use Unicode case folding"
+assert "stringByTrimmingCharactersInSet" not in content_type_policy, "media types must use HTTP ASCII OWS rules"
+assert "WITASCIIStringEquals" in content_type_policy, "media type comparisons must be ASCII-only"
+assert 'WITASCIIStringEquals([mediaType substringToIndex:separator.location], @"application")' in content_type_policy, "JSON media types must stay in the application tree"
+assert "WITIsRestrictedName(subtype)" in content_type_policy, "subtypes must satisfy the RFC 6838 restricted-name grammar"
+assert 'WITASCIIStringEquals(subtype, @"json")' in content_type_policy, "canonical JSON media types must be accepted"
+assert "WITASCIIStringHasSuffix(subtype, jsonSuffix)" in content_type_policy, "structured JSON suffixes must end with +json"
+assert content_type_policy.index("WITIsRestrictedName(subtype)") < content_type_policy.index('WITASCIIStringEquals(subtype, @"json")'), "original subtype bytes must be validated before case-insensitive comparisons"
+assert "name.length > 127" in http_policy, "restricted names must retain the RFC 6838 length limit"
+assert "!WITIsASCIIAlphaNumeric([name characterAtIndex:0])" in http_policy, "restricted names must begin with ASCII alphanumeric"
+assert "!WITIsASCIIAlphaNumeric([name characterAtIndex:name.length - 1])" in http_policy, "restricted names must end with ASCII alphanumeric"
+assert "WITIsRestrictedNameCharacter([name characterAtIndex:index])" in http_policy, "restricted names must reject non-ASCII and disallowed punctuation"
+assert "character == '_' || character == '.' || character == '+';" in http_policy, "restricted names must use only RFC 6838 punctuation"
+ascii_compare = http_policy.split("static BOOL WITASCIIStringEquals", 1)[1].split("static BOOL WITASCIIStringHasSuffix", 1)[0]
+assert "lowercaseString" not in ascii_compare and ascii_compare.count("WITASCIILowercase") == 2, "case-insensitive media type comparison must remain ASCII-only"
+ascii_suffix = http_policy.split("static BOOL WITASCIIStringHasSuffix", 1)[1].split("static BOOL WITIsJSONContentType", 1)[0]
+assert "lowercaseString" not in ascii_suffix and "return WITASCIIStringEquals" in ascii_suffix, "structured suffix comparison must remain ASCII-only"
 
 assert "requestWhenInUseAuthorization" not in context_setter, "voice capture must not prompt for undeclared location access"
 assert "startMonitoringSignificantLocationChanges" not in context_setter, "voice capture must not start background location monitoring"

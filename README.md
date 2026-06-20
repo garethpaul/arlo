@@ -131,6 +131,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
   newer visible voice screen.
 - Wit delegate registration is skipped while the committed token placeholder is
   empty.
+- Wit responses accept only `application/json` or an RFC 6838 ASCII
+  restricted-name `application/*+json` media type. Unicode case-folding
+  lookalikes, suffix-like text in parameters, and non-application types are
+  rejected before JSON parsing.
 - The empty-token lifecycle does not initialize the Wit singleton during launch
   configuration or delegate teardown; configured local builds retain token,
   speech-stop, capture-stop, and ownership behavior.
@@ -163,6 +167,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   empty-token Wit singleton initialization boundary.
 - See `docs/plans/2026-06-14-arlo-device-verification-checklist.md` for the
   simulator/device evidence matrix and runtime non-claims.
+- See `docs/plans/2026-06-19-wit-json-media-type-boundary.md` for the strict Wit
+  response media-type boundary.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 
