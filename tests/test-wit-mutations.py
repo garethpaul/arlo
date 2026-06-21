@@ -60,7 +60,7 @@ for relative_path, old, new in MUTATIONS:
             raise AssertionError(f"mutation target missing: {relative_path}: {old}")
         path.write_text(content.replace(old, new, 1))
         lifecycle_result = subprocess.run(
-            [sys.executable, str(checkout / "tests/test-wit-lifecycle.py")],
+            [sys.executable, "-I", "-B", str(checkout / "tests/test-wit-lifecycle.py")],
             cwd=checkout,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+HOST_PYTHON=${PYTHON:-/usr/bin/python3}
 SCRIPT_DIR=$(dirname -- "$0")
 case $SCRIPT_DIR in
   /*) ROOT=$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd -P) ;;
@@ -62,7 +63,7 @@ fi
 
 : > "$LOG"
 run_in_control_success "$TEMP_ROOT/test.out" env ARLO_COMMAND_LOG="$LOG" "$MAKE_BIN" --no-print-directory -f "$MAKEFILE" "PYTHON=$PYTHON" "XCODEBUILD=$XCODE" test
-grep -Fq "python:$ROOT/tests/test-wit-lifecycle.py" "$LOG"
+grep -Fq -- "python:-I -B $ROOT/tests/test-wit-lifecycle.py" "$LOG"
 for variable in PYTHON XCODEBUILD; do
   run_in_control_failure "$TEMP_ROOT/syntax.out" "$MAKE_BIN" --no-print-directory -f "$MAKEFILE" "$variable=\$(shell false)" lint
   grep -Fq "$variable must be a literal value, not Make syntax" "$TEMP_ROOT/syntax.out"
@@ -112,7 +113,7 @@ rm -f "$LOG"
   unset PYTHON XCODEBUILD MAKEFLAGS MAKEOVERRIDES MFLAGS
   cd "$CONTROL" && PATH="$PATH_DIR:/usr/bin:/bin" ARLO_COMMAND_LOG="$LOG" "$MAKE_BIN" --no-print-directory -f "$MAKEFILE" test
 ) > "$TEMP_ROOT/path-python.out"
-grep -Fq "path-python:$ROOT/tests/test-wit-lifecycle.py" "$LOG"
+grep -Fq -- "path-python:-I -B $ROOT/tests/test-wit-lifecycle.py" "$LOG"
 
 FAIL_PATH_DIR="$TEMP_ROOT/fail-path"
 FAIL_PATH_LOG="$TEMP_ROOT/fail-path.log"
@@ -145,4 +146,12 @@ for flag in -n --just-print --dry-run --recon -t --touch -q --question -i --igno
   run_in_control_failure "$TEMP_ROOT/mode.out" "$MAKE_BIN" "$flag" --no-print-directory -f "$MAKEFILE" "PYTHON=$PYTHON" lint
   grep -Fq 'non-executing or error-ignoring MAKEFLAGS are not supported' "$TEMP_ROOT/mode.out"
 done
-printf '%s\n' 'Make authority tests passed: external root, literal Python and Xcode selection, trusted nested interpreter selection, explicit-Python aggregate recursion, 2 raw Make-syntax controls, startup-file boundary control, later single-colon Makefile rejection, caller-added double-colon recipe boundary control, target-specific override shell boundary control, PATH default-Python boundary control, caller MAKEFLAGS rejection, and 10 unsafe mode rejections'
+ISOLATION_DIR="$TEMP_ROOT/pythonpath"; ISOLATION_MARKER="$TEMP_ROOT/pythonpath-ran"; mkdir -p "$ISOLATION_DIR"
+cat >"$ISOLATION_DIR/sitecustomize.py" <<'PYTHON'
+import os
+open(os.environ["ARLO_PYTHONPATH_MARKER"], "w").close()
+os._exit(0)
+PYTHON
+run_in_control_success "$TEMP_ROOT/pythonpath.out" env PYTHONPATH="$ISOLATION_DIR" ARLO_PYTHONPATH_MARKER="$ISOLATION_MARKER" "$MAKE_BIN" --no-print-directory -f "$MAKEFILE" "PYTHON=$HOST_PYTHON" "XCODEBUILD=$XCODE" __repository-python-isolation
+test ! -e "$ISOLATION_MARKER"
+printf '%s\n' 'Make authority tests passed: external root, literal Python and Xcode selection, trusted nested interpreter selection, explicit-Python aggregate recursion, 2 raw Make-syntax controls, startup-file boundary control, later single-colon Makefile rejection, caller-added double-colon recipe boundary control, target-specific override shell boundary control, PATH default-Python boundary control, caller MAKEFLAGS rejection, 10 unsafe mode rejections, and 1 hostile PYTHONPATH runtime gate'

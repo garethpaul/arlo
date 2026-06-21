@@ -908,7 +908,7 @@ for make_boundary_contract in \
   fi
 done
 
-if ! grep -Fq '[sys.executable, str(checkout / "tests/test-wit-lifecycle.py")]' "$ROOT_DIR/tests/test-wit-mutations.py"; then
+if ! grep -Fq '[sys.executable, "-I", "-B", str(checkout / "tests/test-wit-lifecycle.py")]' "$ROOT_DIR/tests/test-wit-mutations.py"; then
   printf '%s\n' 'Mutation tests must preserve the selected literal Python interpreter.' >&2
   exit 1
 fi
