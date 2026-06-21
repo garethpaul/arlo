@@ -78,6 +78,7 @@ macOS for pushes, pull requests, and manual dispatches. The workflow uses a
 commit-pinned checkout action, read-only repository access, bounded runtimes,
 and does not persist checkout credentials. Full workspace and simulator
 verification remain a macOS legacy-toolchain task.
+Caller-supplied startup makefiles, additional `-f` makefiles with appended double-colon recipes, target-specific override directives, and PATH-based default Python discovery remain caller authority; use the hosted workflow or pass literal trusted tool paths for repository-controlled verification.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 

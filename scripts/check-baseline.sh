@@ -892,6 +892,27 @@ fi
 [ -x "$ROOT_DIR/scripts/test-makefile-root.sh" ] || { printf '%s\n' 'Make authority harness missing or not executable.' >&2; exit 1; }
 grep -Fq 'Status: Completed' "$ROOT_DIR/docs/plans/2026-06-21-arlo-system-make-boundary.md" || { printf '%s\n' 'Make authority plan must be completed.' >&2; exit 1; }
 
+for make_boundary_contract in \
+  'caller-added double-colon recipe boundary control' \
+  'target-specific override shell boundary control' \
+  'PATH default-Python boundary control'; do
+  if ! grep -Fq "$make_boundary_contract" "$ROOT_DIR/scripts/test-makefile-root.sh"; then
+    printf '%s\n' "Make authority harness must keep boundary contract: $make_boundary_contract" >&2
+    exit 1
+  fi
+done
+
+make_boundary_text='Caller-supplied startup makefiles, additional `-f` makefiles with appended double-colon recipes, target-specific override directives, and PATH-based default Python discovery remain caller authority; use the hosted workflow or pass literal trusted tool paths for repository-controlled verification.'
+for make_boundary_document in \
+  "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" \
+  "$ROOT_DIR/docs/plans/2026-06-21-arlo-system-make-boundary.md"; do
+  if ! grep -Fq "$make_boundary_text" "$make_boundary_document"; then
+    printf '%s\n' "$make_boundary_document must document caller-supplied Make authority." >&2
+    exit 1
+  fi
+done
+
 if ! grep -Fq "make check" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the make check wrapper." >&2
   exit 1
