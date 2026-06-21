@@ -6,6 +6,8 @@ TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/arlo-make-authority.XXXXXX")
 trap 'rm -rf "$TEMP_ROOT"' EXIT HUP INT TERM
 CONTROL="$TEMP_ROOT/control dir"; mkdir -p "$CONTROL"
 LOG="$TEMP_ROOT/log"; PYTHON="$TEMP_ROOT/python tool"; XCODE="$TEMP_ROOT/xcode tool"; SHELL_LOG="$TEMP_ROOT/shell.log"
+TRUSTED_PYTHON=/usr/bin/python3
+test -x "$TRUSTED_PYTHON"
 printf '%s\n' '#!/bin/sh' 'printf "python:%s\\n" "$*" >> "$ARLO_COMMAND_LOG"' > "$PYTHON"
 printf '%s\n' '#!/bin/sh' 'printf "xcode:%s\\n" "$*" >> "$ARLO_COMMAND_LOG"' > "$XCODE"
 chmod +x "$PYTHON" "$XCODE"
@@ -58,14 +60,40 @@ PYTHON_SCRIPT
 chmod +x "$PATH_DIR/python3"
 rm -f "$LOG"
 (
-  unset PYTHON XCODEBUILD
+  unset PYTHON XCODEBUILD MAKEFLAGS MAKEOVERRIDES MFLAGS
   cd "$CONTROL" && PATH="$PATH_DIR:/usr/bin:/bin" ARLO_COMMAND_LOG="$LOG" /usr/bin/make --no-print-directory -f "$MAKEFILE" test
 ) > "$TEMP_ROOT/path-python.out"
 grep -Fq "path-python:$ROOT/tests/test-wit-lifecycle.py" "$LOG"
+
+FAIL_PATH_DIR="$TEMP_ROOT/fail-path"
+FAIL_PATH_LOG="$TEMP_ROOT/fail-path.log"
+FAIL_SHELL_LOG="$TEMP_ROOT/fail-shell.log"
+mkdir -p "$FAIL_PATH_DIR"
+cat > "$FAIL_PATH_DIR/python3" <<PYTHON_SCRIPT
+#!/bin/sh
+printf 'unexpected-python:%s\n' "\$*" >> '$FAIL_PATH_LOG'
+exit 1
+PYTHON_SCRIPT
+chmod +x "$FAIL_PATH_DIR/python3"
+cat > "$FAIL_PATH_DIR/sh" <<SHELL_SCRIPT
+#!/bin/sh
+printf 'unexpected-shell:%s\n' "\$*" >> '$FAIL_SHELL_LOG'
+exit 1
+SHELL_SCRIPT
+chmod +x "$FAIL_PATH_DIR/sh"
+rm -f "$FAIL_PATH_LOG" "$FAIL_SHELL_LOG"
+(cd "$CONTROL" && PATH="$FAIL_PATH_DIR:/usr/bin:/bin" /usr/bin/make --no-print-directory -f "$MAKEFILE" "PYTHON=$TRUSTED_PYTHON" "XCODEBUILD=$XCODE" test) > "$TEMP_ROOT/literal-python.out"
+test ! -e "$FAIL_PATH_LOG"
+test ! -e "$FAIL_SHELL_LOG"
+
+if [ "${ARLO_EXPLICIT_PYTHON_PROBE:-0}" != 1 ]; then
+  (cd "$CONTROL" && ARLO_EXPLICIT_PYTHON_PROBE=1 /usr/bin/make --no-print-directory -f "$MAKEFILE" "PYTHON=$TRUSTED_PYTHON" "XCODEBUILD=$XCODE" root-test) > "$TEMP_ROOT/explicit-python-root-test.out"
+fi
+
 if (cd "$CONTROL" && /usr/bin/make --no-print-directory -f "$MAKEFILE" MAKEFLAGS=-n "PYTHON=$PYTHON" lint) > "$TEMP_ROOT/flags.out" 2>&1; then exit 1; fi
 grep -Fq 'MAKEFLAGS must not be overridden' "$TEMP_ROOT/flags.out"
 for flag in -n --just-print --dry-run --recon -t --touch -q --question -i --ignore-errors; do
   if (cd "$CONTROL" && /usr/bin/make "$flag" --no-print-directory -f "$MAKEFILE" "PYTHON=$PYTHON" lint) > "$TEMP_ROOT/mode.out" 2>&1; then exit 1; fi
   grep -Fq 'non-executing or error-ignoring MAKEFLAGS are not supported' "$TEMP_ROOT/mode.out"
 done
-printf '%s\n' 'Make authority tests passed: external root, literal Python and Xcode selection, 2 raw Make-syntax controls, startup-file boundary control, later single-colon Makefile rejection, caller-added double-colon recipe boundary control, target-specific override shell boundary control, PATH default-Python boundary control, caller MAKEFLAGS rejection, and 10 unsafe mode rejections'
+printf '%s\n' 'Make authority tests passed: external root, literal Python and Xcode selection, trusted nested interpreter selection, explicit-Python aggregate recursion, 2 raw Make-syntax controls, startup-file boundary control, later single-colon Makefile rejection, caller-added double-colon recipe boundary control, target-specific override shell boundary control, PATH default-Python boundary control, caller MAKEFLAGS rejection, and 10 unsafe mode rejections'

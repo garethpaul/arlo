@@ -895,12 +895,27 @@ grep -Fq 'Status: Completed' "$ROOT_DIR/docs/plans/2026-06-21-arlo-system-make-b
 for make_boundary_contract in \
   'caller-added double-colon recipe boundary control' \
   'target-specific override shell boundary control' \
-  'PATH default-Python boundary control'; do
+  'PATH default-Python boundary control' \
+  'trusted nested interpreter selection' \
+  'explicit-Python aggregate recursion'; do
   if ! grep -Fq "$make_boundary_contract" "$ROOT_DIR/scripts/test-makefile-root.sh"; then
     printf '%s\n' "Make authority harness must keep boundary contract: $make_boundary_contract" >&2
     exit 1
   fi
 done
+
+if ! grep -Fq '[sys.executable, str(checkout / "tests/test-wit-lifecycle.py")]' "$ROOT_DIR/tests/test-wit-mutations.py"; then
+  printf '%s\n' 'Mutation tests must preserve the selected literal Python interpreter.' >&2
+  exit 1
+fi
+if ! grep -Fq '["/bin/sh", str(checkout / "scripts/test-wit-http-policy.sh")]' "$ROOT_DIR/tests/test-wit-mutations.py"; then
+  printf '%s\n' 'Mutation tests must preserve the repository-controlled shell.' >&2
+  exit 1
+fi
+if ! grep -Fq 'unset PYTHON XCODEBUILD MAKEFLAGS MAKEOVERRIDES MFLAGS' "$ROOT_DIR/scripts/test-makefile-root.sh"; then
+  printf '%s\n' 'Make authority harness must isolate nested default-Python discovery from recursive overrides.' >&2
+  exit 1
+fi
 
 make_boundary_text='Caller-supplied startup makefiles, additional `-f` makefiles with appended double-colon recipes, target-specific override directives, and PATH-based default Python discovery remain caller authority; use the hosted workflow or pass literal trusted tool paths for repository-controlled verification.'
 for make_boundary_document in \
