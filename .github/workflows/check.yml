@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Run SDK-free baseline
-        run: make check
+        run: /usr/bin/make check
 
   native-policy:
     runs-on: macos-15

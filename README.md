@@ -59,7 +59,7 @@ Run the SDK-free source baseline and root wrapper gates first:
 make lint
 make test
 make build
-make check
+/usr/bin/make check
 scripts/check-baseline.sh
 ```
 

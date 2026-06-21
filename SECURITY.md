@@ -58,6 +58,10 @@ transcripts must not be written to logs or propagated in diagnostic metadata.
 
 ## Dependency and Supply Chain Security
 
+Repository verification enters through `/usr/bin/make`; the Makefile freezes
+the canonical root, `/bin/sh`, Python, and Xcode selections and rejects startup
+files and non-executing or error-ignoring modes.
+
 The canonical Check job uses a read-only, non-persisted checkout token so later
 steps cannot reuse repository credentials from the working copy.
 

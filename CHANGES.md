@@ -1,5 +1,11 @@
 # Arlo Changes
 
+## 2026-06-21
+
+- Bound hosted and contributor verification to `/usr/bin/make` and added an
+  executable authority harness for shell, root, Python, Xcode, startup-file,
+  later-Makefile, and unsafe-mode boundaries.
+
 ## 2026-06-19
 
 - Validated local Wit tokens before enabling voice UI, allocating audio, or constructing Authorization headers.
