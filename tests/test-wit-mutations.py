@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -59,13 +60,13 @@ for relative_path, old, new in MUTATIONS:
             raise AssertionError(f"mutation target missing: {relative_path}: {old}")
         path.write_text(content.replace(old, new, 1))
         lifecycle_result = subprocess.run(
-            ["python3", str(checkout / "tests/test-wit-lifecycle.py")],
+            [sys.executable, "-I", "-B", str(checkout / "tests/test-wit-lifecycle.py")],
             cwd=checkout,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
         native_result = subprocess.run(
-            ["sh", str(checkout / "scripts/test-wit-http-policy.sh")],
+            ["/bin/sh", str(checkout / "scripts/test-wit-http-policy.sh")],
             cwd=checkout,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := check
-.PHONY: __repository-make-authority build check lint root-test test verify
+.PHONY: __repository-make-authority __repository-python-isolation build check lint root-test test verify
 .SECONDEXPANSION:
 
 override SHELL := /bin/sh
@@ -17,7 +17,8 @@ override XCODEBUILD := xcodebuild
 else
 override XCODEBUILD := $(value XCODEBUILD)
 endif
-override ROOT := $(shell path='$(subst ','"'"',$(value MAKEFILE_LIST))'; path=$$(/usr/bin/printf '%s' "$$path" | /usr/bin/sed 's/^ //'); [ -f "$$path" ] || exit 1; directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P)
+override REPOSITORY_SED := $(shell if [ -x /usr/bin/sed ]; then /usr/bin/printf '%s' /usr/bin/sed; elif [ -x /bin/sed ]; then /usr/bin/printf '%s' /bin/sed; fi)
+override ROOT := $(shell path='$(subst ','"'"',$(value MAKEFILE_LIST))'; path=$$(/usr/bin/printf '%s' "$$path" | '$(REPOSITORY_SED)' 's/^ //'); [ -f "$$path" ] || exit 1; directory=$${path%/*}; [ "$$directory" != "$$path" ] || directory=.; /usr/bin/printf '%s\n' "$$directory" | /usr/bin/grep -q '^/' || directory=./$$directory; CDPATH= cd "$$directory" && /bin/pwd -P)
 export PYTHON XCODEBUILD ROOT
 
 override REPOSITORY_MAKE_DOLLAR := $$
@@ -79,11 +80,14 @@ override REPOSITORY_PYTHON_LITERAL := $(call REPOSITORY_SHELL_LITERAL,$(PYTHON))
 override REPOSITORY_XCODEBUILD_LITERAL := $(call REPOSITORY_SHELL_LITERAL,$(XCODEBUILD))
 
 build check lint root-test test verify:: $$(if $$(filter file,$$(origin MAKEFILE_LIST)),,$$(error MAKEFILE_LIST must not be overridden))
-build check lint root-test test verify:: $$(if $$(shell path=$$$$(/usr/bin/printf '%s' '$$(subst ','"'"',$$(MAKEFILE_LIST))' | /usr/bin/sed 's/^ //') && [ -f "$$$$path" ] && /usr/bin/printf '%s' ok),,$$(error repository Makefile must be loaded alone))
+build check lint root-test test verify:: $$(if $$(shell path=$$$$(/usr/bin/printf '%s' '$$(subst ','"'"',$$(MAKEFILE_LIST))' | '$$(REPOSITORY_SED)' 's/^ //') && [ -f "$$$$path" ] && /usr/bin/printf '%s' ok),,$$(error repository Makefile must be loaded alone))
 build check lint root-test test verify:: __repository-make-authority
 
 __repository-make-authority::
 	@:
+
+__repository-python-isolation::
+	'$(REPOSITORY_PYTHON_LITERAL)' -I -B '$(REPOSITORY_ROOT_LITERAL)/tests/test-wit-lifecycle.py'
 
 define REPOSITORY_PUBLIC_RECIPES
 root-test::
@@ -92,8 +96,8 @@ lint::
 	/bin/sh '$(REPOSITORY_ROOT_LITERAL)/scripts/check-baseline.sh'
 test::
 	/bin/sh '$(REPOSITORY_ROOT_LITERAL)/scripts/check-baseline.sh'
-	'$(REPOSITORY_PYTHON_LITERAL)' '$(REPOSITORY_ROOT_LITERAL)/tests/test-wit-lifecycle.py'
-	'$(REPOSITORY_PYTHON_LITERAL)' '$(REPOSITORY_ROOT_LITERAL)/tests/test-wit-mutations.py'
+	'$(REPOSITORY_PYTHON_LITERAL)' -I -B '$(REPOSITORY_ROOT_LITERAL)/tests/test-wit-lifecycle.py'
+	'$(REPOSITORY_PYTHON_LITERAL)' -I -B '$(REPOSITORY_ROOT_LITERAL)/tests/test-wit-mutations.py'
 	/bin/sh '$(REPOSITORY_ROOT_LITERAL)/scripts/test-wit-http-policy.sh'
 	@if command -v '$(REPOSITORY_XCODEBUILD_LITERAL)' >/dev/null 2>&1; then echo "xcodebuild found, but no shared UI-test scheme is checked in; run ArloUITests from Arlo.xcworkspace with the legacy toolchain."; else echo "xcodebuild not found; simulator UI tests require macOS with the legacy Swift 3.0 toolchain."; fi
 build::

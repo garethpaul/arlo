@@ -61,6 +61,7 @@ transcripts must not be written to logs or propagated in diagnostic metadata.
 Repository verification enters through `/usr/bin/make`; the Makefile freezes
 the canonical root, `/bin/sh`, Python, and Xcode selections and rejects startup
 files and non-executing or error-ignoring modes.
+Caller-supplied startup makefiles, additional `-f` makefiles with appended double-colon recipes, target-specific override directives, and PATH-based default Python discovery remain caller authority; use the hosted workflow or pass literal trusted tool paths for repository-controlled verification.
 
 The canonical Check job uses a read-only, non-persisted checkout token so later
 steps cannot reuse repository credentials from the working copy.
