@@ -17,7 +17,7 @@ override XCODEBUILD := xcodebuild
 else
 override XCODEBUILD := $(value XCODEBUILD)
 endif
-override ROOT := $(shell path='$(subst ','"'"',$(value MAKEFILE_LIST))'; path=$$(/usr/bin/printf '%s' "$$path" | /usr/bin/sed 's/^ //'); [ -f "$$path" ] || exit 1; directory=$$(/usr/bin/dirname -- "$$path"); CDPATH= cd -- "$$directory" && /bin/pwd -P)
+override ROOT := $(shell path='$(subst ','"'"',$(value MAKEFILE_LIST))'; path=$$(/usr/bin/printf '%s' "$$path" | /usr/bin/sed 's/^ //'); [ -f "$$path" ] || exit 1; directory=$$(/usr/bin/dirname -- "$$path"); /usr/bin/printf '%s\n' "$$directory" | /usr/bin/grep -q '^/' || directory=./$$directory; CDPATH= cd "$$directory" && /bin/pwd -P)
 export PYTHON XCODEBUILD ROOT
 
 override REPOSITORY_MAKE_DOLLAR := $$

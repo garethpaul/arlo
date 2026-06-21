@@ -1,7 +1,11 @@
 #!/usr/bin/env sh
 set -eu
 
-ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+SCRIPT_DIR=$(dirname -- "$0")
+case $SCRIPT_DIR in
+  /*) ROOT_DIR=$(CDPATH='' cd "$SCRIPT_DIR/.." && pwd) ;;
+  *) ROOT_DIR=$(CDPATH='' cd "./$SCRIPT_DIR/.." && pwd) ;;
+esac
 APP_DELEGATE="$ROOT_DIR/Arlo/AppDelegate.swift"
 VIEW_CONTROLLER="$ROOT_DIR/Arlo/ViewController.swift"
 SIRI_WAVEFORM="$ROOT_DIR/Arlo/SiriWaveformView.swift"
