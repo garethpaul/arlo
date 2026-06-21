@@ -266,6 +266,7 @@ if [ "$(grep -Ec '^[[:space:]]*permissions:' "$CI_WORKFLOW")" -ne 1 ] || \
 fi
 
 if ! grep -Fq 'runs-on: macos-15' "$CI_WORKFLOW" || \
+   ! grep -Fq 'run: /usr/bin/make check' "$CI_WORKFLOW" || \
    ! grep -Fq 'run: scripts/test-wit-http-policy.sh' "$CI_WORKFLOW" || \
    ! grep -Fq 'Pods/Wit/Wit/WITHTTPPolicy.m' "$CI_WORKFLOW"; then
   printf '%s\n' "Check workflow must run native policy tests and compile maintained Wit sources." >&2
@@ -281,8 +282,10 @@ if [ ! -f "$CHECKOUT_CREDENTIAL_PLAN" ] || \
   exit 1
 fi
 
-if ! grep -Fq 'override ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile" || \
-   ! grep -Fq '$(ROOT)scripts/check-baseline.sh' "$ROOT_DIR/Makefile"; then
+if ! grep -Fq 'override ROOT := $(shell' "$ROOT_DIR/Makefile" || \
+   ! grep -Fq "scripts/check-baseline.sh'" "$ROOT_DIR/Makefile" || \
+   ! grep -Fq 'MAKEFLAGS must not be overridden' "$ROOT_DIR/Makefile" || \
+   ! grep -Fq 'MAKEFILES must be empty' "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile verification must protect and resolve the checker from the loaded Makefile." >&2
   exit 1
 fi
@@ -857,35 +860,37 @@ if [ ! -f "$ROOT_DIR/Makefile" ]; then
   exit 1
 fi
 
-if ! grep -Fq 'ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile"; then
+if ! grep -Fq 'override ROOT := $(shell' "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile must resolve repository-root commands from its own location." >&2
   exit 1
 fi
 
-if ! grep -Fq '$(ROOT)scripts/check-baseline.sh' "$ROOT_DIR/Makefile"; then
+if ! grep -Fq "scripts/check-baseline.sh'" "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile must run the SDK-free baseline check." >&2
   exit 1
 fi
 
-if ! grep -Fq "lint:" "$ROOT_DIR/Makefile"; then
+if ! grep -Fq "lint::" "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile must expose a lint gate." >&2
   exit 1
 fi
 
-if ! grep -Fq "test:" "$ROOT_DIR/Makefile"; then
+if ! grep -Fq "test::" "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile must expose a test gate." >&2
   exit 1
 fi
 
-if ! grep -Fq "build:" "$ROOT_DIR/Makefile"; then
+if ! grep -Fq "build::" "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile must expose a build gate." >&2
   exit 1
 fi
 
-if ! grep -Fq "verify: lint test build" "$ROOT_DIR/Makefile"; then
+if ! grep -Fq "verify:: root-test lint test build" "$ROOT_DIR/Makefile"; then
   printf '%s\n' "Makefile must expose a combined verify gate." >&2
   exit 1
 fi
+[ -x "$ROOT_DIR/scripts/test-makefile-root.sh" ] || { printf '%s\n' 'Make authority harness missing or not executable.' >&2; exit 1; }
+grep -Fq 'Status: Completed' "$ROOT_DIR/docs/plans/2026-06-21-arlo-system-make-boundary.md" || { printf '%s\n' 'Make authority plan must be completed.' >&2; exit 1; }
 
 if ! grep -Fq "make check" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document the make check wrapper." >&2

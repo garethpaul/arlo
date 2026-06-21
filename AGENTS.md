@@ -18,11 +18,11 @@
 ## Development commands
 
 - Install dependencies: `pod install`
-- Full baseline: `make check`
-- Combined verification: `make verify`
-- Lint/static checks: `make lint`
-- Tests: `make test`
-- Build: `make build`
+- Full baseline: `/usr/bin/make check`
+- Combined verification: `/usr/bin/make verify`
+- Lint/static checks: `/usr/bin/make lint`
+- Tests: `/usr/bin/make test`
+- Build: `/usr/bin/make build`
 - Local Apple development: `open Arlo.xcworkspace`
 - If a command above skips because a platform toolchain is missing, verify on a machine with that SDK before claiming platform behavior is tested.
 
@@ -35,7 +35,7 @@
 ## Testing guidance
 
 - Test-related files detected: `ArloUITests/ArloUITests.swift`
-- Start with the narrowest relevant test or Make target, then run `make check` before handing off if the change is not documentation-only.
+- Start with the narrowest relevant test or Make target, then run `/usr/bin/make check` before handing off if the change is not documentation-only.
 - Keep README verification notes in sync when commands, fixtures, or supported toolchains change.
 
 ## PR / change guidance
@@ -62,6 +62,6 @@
 
 1. Inspect the README, Makefile, manifests, and the files directly related to the request.
 2. Make the smallest source or docs change that satisfies the task; avoid generated, vendored, or local-environment files unless required.
-3. Run the narrowest useful validation first, then `make check` or the documented package/platform gate when available.
+3. Run the narrowest useful validation first, then `/usr/bin/make check` or the documented package/platform gate when available.
 4. If a required SDK, service credential, or external runtime is unavailable, record the skipped command and why.
 5. Summarize changed files, commands run, and remaining risks or follow-up validation.
