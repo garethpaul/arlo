@@ -40,11 +40,44 @@ WIT_REQUEST_URL_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-request-url-log-re
 WIT_NETWORK_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-network-error-log-redaction.md"
 WIT_PROCESSING_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-processing-error-log-redaction.md"
 SETUP_GUIDE_PLAN="$ROOT_DIR/docs/plans/2026-06-26-arlo-setup-guide.md"
+GREETING_CAPTURE_PLAN="$ROOT_DIR/docs/plans/2026-06-26-arlo-greeting-capture-boundary.md"
 
 if [ ! -f "$WIT_VAD_TRACKER" ]; then
   printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
   exit 1
 fi
+
+if [ ! -f "$GREETING_CAPTURE_PLAN" ] || \
+   ! grep -Fq "Status: Completed" "$GREETING_CAPTURE_PLAN" || \
+   ! grep -Fq 'repository and external-directory `/usr/bin/make check`' "$GREETING_CAPTURE_PLAN" || \
+   ! grep -Fq "hostile greeting-capture mutations" "$GREETING_CAPTURE_PLAN"; then
+  printf '%s\n' "Arlo greeting capture plan must record completed verification evidence." >&2
+  exit 1
+fi
+
+recording_start=$(sed -n '/func witDidStartRecording()/,/func witDidStopRecording()/p' "$VIEW_CONTROLLER")
+case $recording_start in
+  *'strongSelf.talker.stopSpeaking(at: .immediate)'*'strongSelf.applyRecordingState(true)'*) ;;
+  *)
+    printf '%s\n' "Wit recording start must stop app-generated speech before activating recording UI." >&2
+    exit 1
+    ;;
+esac
+
+if ! grep -Fq 'recording_start.index("strongSelf.talker.stopSpeaking(at: .immediate)") < recording_start.index("strongSelf.applyRecordingState(true)")' "$ROOT_DIR/tests/test-wit-lifecycle.py" || \
+   [ "$(grep -Fc 'Arlo/ViewController.swift' "$ROOT_DIR/tests/test-wit-mutations.py")" -ne 2 ]; then
+  printf '%s\n' "Greeting capture lifecycle and mutation regressions are missing." >&2
+  exit 1
+fi
+
+greeting_capture_guidance='Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.'
+for greeting_capture_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$greeting_capture_guidance" "$greeting_capture_doc"; then
+    printf '%s\n' "$greeting_capture_doc must document the greeting capture boundary." >&2
+    exit 1
+  fi
+done
 
 if grep -Eq 'NSLog\([^;]*(token|url)' "$WIT_VAD_TRACKER" || \
    grep -Fq 'here is the final url' "$WIT_VAD_TRACKER"; then

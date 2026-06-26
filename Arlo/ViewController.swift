@@ -222,6 +222,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
             guard let strongSelf = self, strongSelf.isViewActive else {
                 return
             }
+            strongSelf.talker.stopSpeaking(at: .immediate)
             strongSelf.applyRecordingState(true)
         }
     }

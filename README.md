@@ -72,6 +72,8 @@ roadmap item introduces a documented local configuration path; when that work
 lands, use only synthetic phrases and the privacy rules in
 [`DEVICE_VERIFICATION.md`](DEVICE_VERIFICATION.md).
 
+Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
+
 ## Testing and Verification
 
 ### SDK-Free Verification
