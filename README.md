@@ -74,6 +74,8 @@ lands, use only synthetic phrases and the privacy rules in
 
 Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
 
+Arlo starts its one-time synthesized greeting only after the controller becomes active and visible, preventing preloaded or off-screen views from emitting speech.
+
 ## Testing and Verification
 
 ### SDK-Free Verification
@@ -205,6 +207,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
   simulator/device evidence matrix and runtime non-claims.
 - See `docs/plans/2026-06-19-wit-json-media-type-boundary.md` for the strict Wit
   response media-type boundary.
+- See `docs/plans/2026-06-26-arlo-greeting-capture-boundary.md` for the
+  synthesized-speech interruption boundary when recording starts.
+- See `docs/plans/2026-06-26-arlo-visible-greeting.md` for one-time visible-view
+  ownership of the launch greeting.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `CHANGES.md` for the maintenance history.
 

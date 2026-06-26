@@ -53,6 +53,7 @@
 - The waveform uses Wit `WITAudioPowerChanged` notifications for audio levels and keeps the display link limited to animation cadence.
 - The waveform treats non-finite Wit audio-power values as silence before updating the UI.
 - Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
+- Arlo starts its one-time synthesized greeting only after the controller becomes active and visible, preventing preloaded or off-screen views from emitting speech.
 - Waveform updates tolerate a missing storyboard outlet through an optional update helper.
 - Wit request diagnostics retain only HTTP method metadata and never complete request URLs or serialized context.
 - Wit network error diagnostics retain only error domain and numeric code, never descriptions, userInfo, or request metadata.

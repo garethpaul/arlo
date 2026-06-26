@@ -18,6 +18,7 @@ Priority:
 
 - Preserve the voice greeting, microphone button, waveform, and Wit delegate flow
 - Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
+- Arlo starts its one-time synthesized greeting only after the controller becomes active and visible, preventing preloaded or off-screen views from emitting speech.
 - Keep the CocoaPods workspace as the build entry point
 - Avoid committing Wit.ai credentials, generated signing material, or user audio
 - Keep the microphone control accessible and test-addressable
