@@ -1,5 +1,22 @@
 # Arlo Changes
 
+## 2026-06-26 15:00 - P1 - Keep launch greeting visible-view scoped
+
+- Arlo starts its one-time synthesized greeting only after the controller becomes active and visible, preventing preloaded or off-screen views from emitting speech.
+- Added red-first lifecycle coverage and hostile mutations for missing active-view, one-time, and ownership-claim boundaries.
+- Preserved the greeting copy, Australian voice, recording-start interruption, token behavior, and microphone flow.
+- Focused lifecycle and full hostile mutation suites passed after the initial
+  assertion failed on `viewDidLoad` speech.
+- Repository and external-directory `/usr/bin/make check`, shell syntax,
+  Python syntax, and `git diff --check` passed. Native app execution remains
+  unavailable on this Linux host and requires hosted legacy-macOS validation.
+- Hosted check run `28269325572` passed the static baseline and native
+  Foundation policy suite, and CodeQL run `28269325690` passed Actions and
+  Python analysis on implementation head
+  `7739ed06f9860e77ef3533827d9a3168a307d792`.
+- Codex review was attempted against `origin/master` but stopped before analysis
+  with OpenAI HTTP 401; immutable manual review found no actionable issues.
+
 ## 2026-06-26 11:05 - P1 - Prevent launch-greeting self-capture
 
 - Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.

@@ -11,6 +11,9 @@ TEMP_ROOT.mkdir(exist_ok=True)
 MUTATIONS = (
     ("Arlo/AppDelegate.swift", "configureWit()", "setActive(true)"),
     ("Arlo/ViewController.swift", "strongSelf.talker.stopSpeaking(at: .immediate)\n            strongSelf.applyRecordingState(true)", "strongSelf.applyRecordingState(true)"),
+    ("Arlo/ViewController.swift", "guard isViewActive && !hasSpokenGreeting else", "guard !hasSpokenGreeting else"),
+    ("Arlo/ViewController.swift", "guard isViewActive && !hasSpokenGreeting else", "guard isViewActive else"),
+    ("Arlo/ViewController.swift", "hasSpokenGreeting = true", "hasSpokenGreeting = false"),
     ("Pods/Wit/Wit/WITRecordingSession.m", "WITIsValidAccessToken(witToken)", "witToken != nil"),
     ("Pods/Wit/Wit/WITRecordingSession.m", "setActive:NO", "setActive:YES"),
     ("Pods/Wit/Wit/Wit.m", "session != self.recordingSession", "session == self.recordingSession"),

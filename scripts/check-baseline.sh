@@ -41,6 +41,7 @@ WIT_NETWORK_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-network-error-lo
 WIT_PROCESSING_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-processing-error-log-redaction.md"
 SETUP_GUIDE_PLAN="$ROOT_DIR/docs/plans/2026-06-26-arlo-setup-guide.md"
 GREETING_CAPTURE_PLAN="$ROOT_DIR/docs/plans/2026-06-26-arlo-greeting-capture-boundary.md"
+VISIBLE_GREETING_PLAN="$ROOT_DIR/docs/plans/2026-06-26-arlo-visible-greeting.md"
 
 if [ ! -f "$WIT_VAD_TRACKER" ]; then
   printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
@@ -55,6 +56,24 @@ if [ ! -f "$GREETING_CAPTURE_PLAN" ] || \
   exit 1
 fi
 
+if [ ! -f "$VISIBLE_GREETING_PLAN" ] || \
+   ! grep -Fq "Status: Completed" "$VISIBLE_GREETING_PLAN" || \
+   ! grep -Fq "red-first lifecycle assertion" "$VISIBLE_GREETING_PLAN" || \
+   ! grep -Fq "hostile visible-greeting mutations" "$VISIBLE_GREETING_PLAN"; then
+  printf '%s\n' "Arlo visible greeting plan must record completed verification evidence." >&2
+  exit 1
+fi
+
+view_did_load=$(sed -n '/override func viewDidLoad()/,/func updateMeters()/p' "$VIEW_CONTROLLER")
+visible_greeting=$(sed -n '/override func viewDidAppear(_ animated: Bool)/,/override func viewWillDisappear/p' "$VIEW_CONTROLLER")
+if printf '%s\n' "$view_did_load" | grep -Fq 'talker.speak(utter)' || \
+   ! printf '%s\n' "$visible_greeting" | grep -Fq 'guard isViewActive && !hasSpokenGreeting else' || \
+   ! printf '%s\n' "$visible_greeting" | grep -Fq 'hasSpokenGreeting = true' || \
+   ! printf '%s\n' "$visible_greeting" | grep -Fq 'talker.speak(utter)'; then
+  printf '%s\n' "Arlo greeting must run once only from an active visible controller." >&2
+  exit 1
+fi
+
 recording_start=$(sed -n '/func witDidStartRecording()/,/func witDidStopRecording()/p' "$VIEW_CONTROLLER")
 case $recording_start in
   *'strongSelf.talker.stopSpeaking(at: .immediate)'*'strongSelf.applyRecordingState(true)'*) ;;
@@ -65,7 +84,7 @@ case $recording_start in
 esac
 
 if ! grep -Fq 'recording_start.index("strongSelf.talker.stopSpeaking(at: .immediate)") < recording_start.index("strongSelf.applyRecordingState(true)")' "$ROOT_DIR/tests/test-wit-lifecycle.py" || \
-   [ "$(grep -Fc 'Arlo/ViewController.swift' "$ROOT_DIR/tests/test-wit-mutations.py")" -ne 2 ]; then
+   [ "$(grep -Fc 'Arlo/ViewController.swift' "$ROOT_DIR/tests/test-wit-mutations.py")" -ne 5 ]; then
   printf '%s\n' "Greeting capture lifecycle and mutation regressions are missing." >&2
   exit 1
 fi
@@ -75,6 +94,15 @@ for greeting_capture_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
   "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
   if ! grep -Fq "$greeting_capture_guidance" "$greeting_capture_doc"; then
     printf '%s\n' "$greeting_capture_doc must document the greeting capture boundary." >&2
+    exit 1
+  fi
+done
+
+visible_greeting_guidance='Arlo starts its one-time synthesized greeting only after the controller becomes active and visible, preventing preloaded or off-screen views from emitting speech.'
+for visible_greeting_doc in "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md"; do
+  if ! grep -Fq "$visible_greeting_guidance" "$visible_greeting_doc"; then
+    printf '%s\n' "$visible_greeting_doc must document visible greeting ownership." >&2
     exit 1
   fi
 done

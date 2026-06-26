@@ -44,6 +44,7 @@ Helpful reports include:
 - Keep recognized speech and inferred Wit response entities out of application and device logs;
   debug diagnostics should retain metadata only.
 - Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
+- Arlo starts its one-time synthesized greeting only after the controller becomes active and visible, preventing preloaded or off-screen views from emitting speech.
 - The hosted workflow uses a commit-pinned checkout action, read-only repository
   access, and a bounded runtime.
 

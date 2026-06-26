@@ -22,6 +22,13 @@ assert "setActive(true)" not in app_delegate, "launch must not reserve the micro
 assert "witAccessToken.characters.count <= 4096" in app_delegate, "configuration must bound token size"
 assert "CharacterSet.whitespacesAndNewlines" in app_delegate, "configuration must reject whitespace-bearing tokens"
 assert "CharacterSet.controlCharacters" in app_delegate, "configuration must reject control-bearing tokens"
+assert "private var hasSpokenGreeting = false" in view_controller, "greeting ownership must be explicit"
+view_did_load = view_controller.split("override func viewDidLoad()", 1)[1].split("func updateMeters()", 1)[0]
+assert "self.talker.speak(utter)" not in view_did_load, "view loading must not emit synthesized speech before visibility"
+assert "override func viewDidAppear(_ animated: Bool)" in view_controller, "the greeting must be owned by visible-view lifecycle"
+visible_greeting = view_controller.split("override func viewDidAppear(_ animated: Bool)", 1)[1].split("override func viewWillDisappear", 1)[0]
+assert "guard isViewActive && !hasSpokenGreeting else" in visible_greeting, "the greeting must require an active view and run once per controller"
+assert visible_greeting.index("hasSpokenGreeting = true") < visible_greeting.index("talker.speak(utter)"), "greeting ownership must be claimed before speech starts"
 recording_start = view_controller.split("func witDidStartRecording()", 1)[1].split("func witDidStopRecording()", 1)[0]
 assert "strongSelf.talker.stopSpeaking(at: .immediate)" in recording_start, "recording start must stop app-generated speech"
 assert recording_start.index("strongSelf.talker.stopSpeaking(at: .immediate)") < recording_start.index("strongSelf.applyRecordingState(true)"), "speech must stop before recording UI activates"

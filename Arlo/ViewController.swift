@@ -32,6 +32,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
     private var currentAudioLevel: CGFloat = 0
     private var isRecording = false
     private var isViewActive = false
+    private var hasSpokenGreeting = false
     
     @IBOutlet weak var waveView: SiriWaveformView?
     let btnVoiceRecog = WITMicButton()
@@ -41,12 +42,7 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         super.viewDidLoad()
         
 
-       let utter = AVSpeechUtterance(string:"Hello my name is Arlo, talk to me!")
-        
-        let v = AVSpeechSynthesisVoice(language: "en-AU")
-        utter.voice = v
         self.talker.delegate = self
-        self.talker.speak(utter)
         
         _ = UIScreen.main.bounds
         _ = self.view.frame
@@ -91,6 +87,17 @@ class ViewController: UIViewController, AVSpeechSynthesizerDelegate, WitDelegate
         isViewActive = true
         configureWitDelegate()
         configureDisplayLink()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard isViewActive && !hasSpokenGreeting else {
+            return
+        }
+        hasSpokenGreeting = true
+        let utter = AVSpeechUtterance(string:"Hello my name is Arlo, talk to me!")
+        utter.voice = AVSpeechSynthesisVoice(language: "en-AU")
+        talker.speak(utter)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
