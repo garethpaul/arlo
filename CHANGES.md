@@ -1,5 +1,66 @@
 # Arlo Changes
 
+## 2026-06-26 01:54 - P2 - Document runnable setup boundaries
+
+### Summary
+
+Replaced generated setup notes with a source-backed Arlo setup and verification
+guide. The guide distinguishes the safe checked-in empty-token mode from the
+still-unimplemented configured voice mode without changing legacy app behavior.
+
+### Work completed
+
+- Documented the Swift 3/iOS 9.3, CocoaPods 1.0.1, Wit 4.1.0, and
+  SCSiriWaveformView 1.0.3 baseline.
+- Made `Arlo.xcworkspace` the explicit post-`pod install` entry point and warned
+  against bypassing the reviewed pod integration or running routine updates.
+- Documented empty-token launch behavior, the missing ignored local token
+  mechanism, portable and hosted gates, and exact-commit device evidence.
+- Retired only the completed README roadmap item and retained local Wit settings
+  as the next distinct configuration task.
+
+### Threads
+
+- None. The cycle was completed directly to avoid overlapping active public
+  pull requests in other repositories.
+
+### Files changed
+
+- `README.md` — added supported baseline, setup, token-mode, and verification guidance.
+- `VISION.md` — recorded the maintained guide boundary and removed the completed item.
+- `scripts/check-baseline.sh` — added fail-closed setup-guide contracts.
+- `docs/plans/2026-06-26-arlo-setup-guide.md` — recorded the implementation plan.
+
+### Validation
+
+- `scripts/check-baseline.sh` — passed after an expected red documentation-contract run.
+- Nineteen hostile setup-guide mutations — all rejected, covering toolchain,
+  workspace, dependency, token-mode, canonical gate, hosted coverage, device,
+  roadmap, change-history, and plan-status drift.
+- `/usr/bin/make check` — passed from the checkout and an external working
+  directory, including Make authority, baseline, Wit lifecycle, and mutation
+  gates. Native Foundation policy tests and Xcode build/UI tests reported their
+  documented non-macOS skips.
+
+### Bugs / findings
+
+- The previous README told users to run the CocoaPods install but then open the
+  project instead of the workspace.
+- The repository has no safe ignored local settings path for configured Wit
+  voice mode; this remains an explicit roadmap item rather than a hidden setup step.
+
+### Blockers
+
+- Configured voice, simulator, microphone, and device behavior cannot be
+  claimed without a future local settings mechanism and exact-commit macOS/device evidence.
+- This Linux host cannot execute macOS Foundation policy tests, CocoaPods,
+  `xcodebuild`, the iOS simulator, microphone capture, or live Wit behavior;
+  hosted macOS checks remain required before merge.
+
+### Next action
+
+- Add a documented, ignored local Wit configuration path in a dedicated change.
+
 ## 2026-06-21
 
 - Bound hosted and contributor verification to `/usr/bin/make` and added an

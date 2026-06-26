@@ -40,10 +40,11 @@ Priority:
 - Keep exact-commit Arlo device verification matrix evidence separate from
   portable checks, with unexecuted Xcode, microphone, Wit, and device rows
   explicit
+- Keep README setup and verification guidance synchronized with the workspace,
+  token boundary, and canonical gates
 
 Next priorities:
 
-- Add README setup and verification instructions
 - Move any required voice-service configuration into documented local settings
 - Modernize Swift, iOS deployment target, Wit, and waveform dependencies in a
   dedicated pass

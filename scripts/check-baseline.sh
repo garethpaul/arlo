@@ -39,6 +39,7 @@ WIT_RESPONSE_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-response-log-redactio
 WIT_REQUEST_URL_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-request-url-log-redaction.md"
 WIT_NETWORK_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-network-error-log-redaction.md"
 WIT_PROCESSING_ERROR_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-15-wit-processing-error-log-redaction.md"
+SETUP_GUIDE_PLAN="$ROOT_DIR/docs/plans/2026-06-26-arlo-setup-guide.md"
 
 if [ ! -f "$WIT_VAD_TRACKER" ]; then
   printf '%s\n' "Compiled Wit VAD tracker source is missing." >&2
@@ -360,6 +361,45 @@ if ! grep -Fq "does not persist checkout credentials" "$ROOT_DIR/README.md" || \
    ! grep -Fq "non-persisted checkout credentials" "$ROOT_DIR/VISION.md" || \
    ! grep -Fq "checkout credential persistence" "$ROOT_DIR/CHANGES.md"; then
   printf '%s\n' "Repository guidance must document the checkout credential boundary." >&2
+  exit 1
+fi
+
+normalized_readme=$(tr '\n\t' '  ' < "$ROOT_DIR/README.md" | tr -s ' ')
+for setup_contract in \
+  'Supported Baseline' \
+  'Xcode with Swift 3 and the iOS 9.3 SDK compatibility needed by this legacy project' \
+  'CocoaPods with the locked Wit 4.1.0 and SCSiriWaveformView 1.0.3 dependency graph' \
+  'open Arlo.xcworkspace' \
+  'Checked-In Empty-Token Mode' \
+  'private static let witAccessToken = ""' \
+  'does not initialize the Wit singleton or activate the play-and-record audio session at launch' \
+  'Configured Voice Mode' \
+  'does not yet provide an ignored local settings file or build setting for a Wit token' \
+  'Do not commit a token or replace the checked-in empty placeholder' \
+  'SDK-Free Verification' \
+  '/usr/bin/make check' \
+  'Hosted Verification' \
+  'Ubuntu runs the SDK-free baseline' \
+  'macOS runs the native Foundation policy tests' \
+  'Exact-Commit Device Verification'; do
+  if ! printf '%s\n' "$normalized_readme" | grep -Fq "$setup_contract"; then
+    printf '%s\n' "README setup guide must keep contract: $setup_contract" >&2
+    exit 1
+  fi
+done
+
+normalized_vision=$(tr '\n\t' '  ' < "$ROOT_DIR/VISION.md" | tr -s ' ')
+normalized_changes=$(tr '\n\t' '  ' < "$ROOT_DIR/CHANGES.md" | tr -s ' ')
+if ! printf '%s\n' "$normalized_vision" | grep -Fq 'Keep README setup and verification guidance synchronized with the workspace, token boundary, and canonical gates' || \
+   ! printf '%s\n' "$normalized_changes" | grep -Fq 'source-backed Arlo setup and verification guide'; then
+  printf '%s\n' 'Roadmap and change history must preserve the Arlo setup-guide boundary.' >&2
+  exit 1
+fi
+
+if [ ! -f "$SETUP_GUIDE_PLAN" ] || \
+   ! grep -Fq '## Status: Completed' "$SETUP_GUIDE_PLAN" || \
+   ! grep -Fq 'Replace Arlo' "$SETUP_GUIDE_PLAN"; then
+  printf '%s\n' 'Arlo setup guide plan must record a completed source-backed implementation.' >&2
   exit 1
 fi
 
