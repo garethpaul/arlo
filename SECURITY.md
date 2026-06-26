@@ -43,6 +43,7 @@ Helpful reports include:
 - Wit processing error diagnostics use a constant message and never provider response fields.
 - Keep recognized speech and inferred Wit response entities out of application and device logs;
   debug diagnostics should retain metadata only.
+- Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
 - The hosted workflow uses a commit-pinned checkout action, read-only repository
   access, and a bounded runtime.
 

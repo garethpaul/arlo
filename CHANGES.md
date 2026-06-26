@@ -1,5 +1,11 @@
 # Arlo Changes
 
+## 2026-06-26 11:05 - P1 - Prevent launch-greeting self-capture
+
+- Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
+- Added failing-first source ordering coverage and a hostile lifecycle mutation
+  for removal of the speech-stop boundary.
+
 ## 2026-06-26 01:54 - P2 - Document runnable setup boundaries
 
 ### Summary

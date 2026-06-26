@@ -17,6 +17,7 @@ The current focus is:
 Priority:
 
 - Preserve the voice greeting, microphone button, waveform, and Wit delegate flow
+- Wit recording start stops the app-generated greeting before recording UI activates, preventing continued self-capture after capture begins.
 - Keep the CocoaPods workspace as the build entry point
 - Avoid committing Wit.ai credentials, generated signing material, or user audio
 - Keep the microphone control accessible and test-addressable

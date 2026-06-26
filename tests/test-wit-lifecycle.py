@@ -9,6 +9,7 @@ def source(path: str) -> str:
 
 
 app_delegate = source("Arlo/AppDelegate.swift")
+view_controller = source("Arlo/ViewController.swift")
 recording = source("Pods/Wit/Wit/WITRecordingSession.m")
 recording_header = source("Pods/Wit/Wit/WITRecordingSession.h")
 uploader = source("Pods/Wit/Wit/WITUploader.m")
@@ -21,6 +22,9 @@ assert "setActive(true)" not in app_delegate, "launch must not reserve the micro
 assert "witAccessToken.characters.count <= 4096" in app_delegate, "configuration must bound token size"
 assert "CharacterSet.whitespacesAndNewlines" in app_delegate, "configuration must reject whitespace-bearing tokens"
 assert "CharacterSet.controlCharacters" in app_delegate, "configuration must reject control-bearing tokens"
+recording_start = view_controller.split("func witDidStartRecording()", 1)[1].split("func witDidStopRecording()", 1)[0]
+assert "strongSelf.talker.stopSpeaking(at: .immediate)" in recording_start, "recording start must stop app-generated speech"
+assert recording_start.index("strongSelf.talker.stopSpeaking(at: .immediate)") < recording_start.index("strongSelf.applyRecordingState(true)"), "speech must stop before recording UI activates"
 assert "WITIsValidAccessToken(witToken)" in recording, "capture must reject malformed tokens before audio allocation"
 assert "setActive:YES" in recording, "capture must activate audio immediately before recorder allocation"
 assert recording.count("setActive:NO") == 2, "start failure and recording stop must deactivate the audio session"
